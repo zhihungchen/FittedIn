@@ -14,24 +14,28 @@ Most health applications are **data-driven** — they count steps, calories, or 
 
 ---
 
-## ✨ Features (Current Implementation)
+## ✨ Current Features
 
 ### 🔐 Authentication System
 - **Secure Registration**: JWT-based user registration with password validation
 - **Login System**: Email/password authentication with bcrypt password hashing
 - **Protected Routes**: JWT middleware for securing API endpoints
-- **User Profiles**: Basic user profile management
+- **User Profiles**: Comprehensive user profile management with privacy settings
 
-### 🎯 Core Features (Planned)
+### 🎯 Goal Management
 - **Goal Tracking**: Set and monitor personal wellness goals
-- **Activity Logging**: Record daily activities and progress
-- **Social Networking**: Connect with friends and accountability partners
-- **Progress Sharing**: Share achievements and milestones
-- **Community Support**: Get motivated by others' journeys
+- **Progress Monitoring**: Track current progress vs target values
+- **Goal Categories**: Weight loss, muscle gain, cardio, nutrition, etc.
+- **Milestone System**: Break down goals into achievable milestones
+
+### 🗄️ Database Management
+- **pgAdmin Interface**: Web-based database management at `http://localhost:5050`
+- **PostgreSQL**: Robust relational database with proper indexing
+- **Migration System**: Automated database schema management
 
 ---
 
-## 🚀 Quick Start Guide
+## 🚀 Quick Start
 
 ### Prerequisites
 - **Node.js** v20 or higher
@@ -48,207 +52,86 @@ cd FittedIn
 ./setup.sh
 ```
 
-### Manual Setup (if automated setup fails)
-
-#### 1. Start Database
+### Start the Application
 ```bash
-# Start PostgreSQL and pgAdmin with Docker
-docker-compose up -d
-```
-
-#### 2. Backend Setup
-```bash
-cd backend
-npm install
-npx sequelize-cli db:migrate
-```
-
-#### 3. Frontend Setup
-```bash
-cd frontend
-npm install
-```
-
-### 🏃‍♂️ Running the Application
-
-#### Option A: Backend Only (Recommended)
-```bash
+# Start the backend server
 cd backend
 node server.js
 ```
-**Access at:** 
-- `http://localhost:3000` - Main application
-- `http://localhost:5050` - pgAdmin (Database management)
-  - Email: `admin@fittedin.com`
-  - Password: `admin123`
 
-#### Option B: Separate Frontend/Backend
-```bash
-# Terminal 1 - Backend
-cd backend && node server.js
-
-# Terminal 2 - Frontend
-cd frontend && npx http-server public -p 8080
-```
-
----
-
-## 🧪 Testing the Login System
-
-### 1. Registration Test
-1. Go to `http://localhost:3000`
-2. Click "Get Started"
-3. Fill out the form:
-   - **Display Name:** `John Doe`
-   - **Email:** `john@example.com`
-   - **Password:** `Password123` (must have uppercase, lowercase, number)
-   - **Confirm Password:** `Password123`
-4. Check "I agree to terms"
-5. Click "Create Account"
-
-### 2. Login Test
-1. Go to `http://localhost:3000/login.html`
-2. Enter credentials:
-   - **Email:** `john@example.com`
-   - **Password:** `Password123`
-3. Click "Login"
-
-### 3. Dashboard Test
-1. After login, you'll be redirected to the main page
-2. Access `http://localhost:3000/dashboard.html` to see the user dashboard
-
----
-
-## 📁 Project Structure
-
-```
-FittedIn/
-├── backend/                 # Node.js backend
-│   ├── src/
-│   │   ├── routes/         # API endpoints (auth, users)
-│   │   ├── models/         # Database models (User)
-│   │   ├── middleware/     # Authentication middleware
-│   │   ├── config/         # Database configuration
-│   │   └── migrations/     # Database migrations
-│   ├── server.js           # Express server entry point
-│   └── package.json
-├── frontend/               # Static frontend
-│   ├── public/
-│   │   ├── index.html      # Landing page
-│   │   ├── login.html      # Login page
-│   │   ├── register.html   # Registration page
-│   │   ├── dashboard.html  # User dashboard
-│   │   ├── js/            # JavaScript files
-│   │   └── css/           # Stylesheets
-│   └── package.json
-├── docker-compose.yml      # PostgreSQL database
-├── setup.sh               # Automated setup script
-└── README.md
-```
-
----
-
-## 🛠️ Technology Stack
-
-### Frontend
-- **HTML5, CSS3, Vanilla JavaScript** — no frontend frameworks
-- **Chart.js** — visualization for progress charts (planned)
-
-### Backend
-- **Node.js (v20+) + Express.js** — REST API endpoints
-- **Sequelize ORM + PostgreSQL** — SQL database, schema migrations
-- **JWT Authentication** — secure authentication
-- **bcrypt** — password hashing
-- **Helmet, CORS, Rate Limiting** — security middleware
-
-### Development Tools
-- **Docker + Docker Compose** — PostgreSQL database
-- **Sequelize CLI** — database migrations
-- **cURL / Postman** — API testing
-
----
-
-## 🔧 Development Commands
-
-```bash
-# Backend
-cd backend
-node server.js          # Start server
-npm run dev             # Start with nodemon (if installed)
-
-# Database
-npx sequelize-cli db:migrate        # Run migrations
-npx sequelize-cli db:migrate:undo   # Rollback migration
-docker-compose ps                   # Check database status
-docker-compose logs postgres        # View database logs
-
-# Frontend
-cd frontend
-npx http-server public -p 8080      # Serve frontend files
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Database Connection Issues
-```bash
-# Check if PostgreSQL is running
-docker-compose ps
-
-# Restart database
-docker-compose restart postgres
-
-# View database logs
-docker-compose logs postgres
-```
-
-### Port Already in Use
-```bash
-# Find process using port 3000
-lsof -i :3000
-
-# Kill the process
-kill -9 <PID>
-```
-
-### Migration Issues
-```bash
-# Reset database
-npx sequelize-cli db:migrate:undo:all
-npx sequelize-cli db:migrate
-```
-
-### Server Won't Start
-```bash
-# Check if you're in the right directory
-cd /Users/andrew/projects/FittedIn/backend
-
-# Install dependencies
-npm install
-
-# Start server
-node server.js
-```
+**Access URLs:**
+- **Main App**: `http://localhost:3000`
+- **pgAdmin**: `http://localhost:5050` (admin@fittedin.com / admin123)
 
 ---
 
 ## 📚 Documentation
 
-### Setup & Development
-- [DEVELOPMENT.md](DEVELOPMENT.md) - Detailed development setup and workflow
-- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and design decisions
-- [QUICKSTART.md](QUICKSTART.md) - Quick start guide
+### 🏃‍♂️ Getting Started
+- [Quick Start Guide](docs/getting-started/QUICKSTART.md) - Get up and running in 5 minutes
+- [Development Setup](docs/development/DEVELOPMENT.md) - Detailed development environment setup
+- [Database Management](docs/development/DATABASE_MANAGEMENT.md) - pgAdmin usage guide
 
-### Midterm Presentation
-- [MIDTERM_PRESENTATION_CHECKLIST.md](MIDTERM_PRESENTATION_CHECKLIST.md) - Complete preparation checklist for midterm presentation
-- [MIDTERM_SUMMARY.md](MIDTERM_SUMMARY.md) - Summary of completed features and demo flow
+### 🏗️ Architecture
+- [System Architecture](docs/architecture/ARCHITECTURE.md) - Technical architecture overview
+- [Architecture Improvements](docs/architecture/ARCHITECTURE_IMPROVEMENT.md) - Future enhancements
 
-### Feature Documentation
-- [DASHBOARD_IMPROVEMENTS.md](DASHBOARD_IMPROVEMENTS.md) - Dashboard personalization features documentation
-- [ARCHITECTURE_IMPROVEMENT.md](ARCHITECTURE_IMPROVEMENT.md) - Architecture improvements and decisions
-- [PROFILE_DEMO.md](PROFILE_DEMO.md) - Profile system demo guide
-- [DATABASE_MANAGEMENT.md](DATABASE_MANAGEMENT.md) - pgAdmin usage guide
+### 🎨 Features
+- [Dashboard Features](docs/features/DASHBOARD_IMPROVEMENTS.md) - Dashboard personalization
+- [Profile System](docs/features/PROFILE_DEMO.md) - User profile management
+- [Authentication](docs/features/AUTH_FIX_SUMMARY.md) - Auth system documentation
+
+### 🚀 Deployment
+- [Midterm Summary](docs/deployment/MIDTERM_SUMMARY.md) - Project progress summary
+- [Presentation Checklist](docs/deployment/MIDTERM_PRESENTATION_CHECKLIST.md) - Demo preparation
+
+---
+
+## 🧪 Testing
+
+### API Testing
+```bash
+# Health check
+curl http://localhost:3000/api/health
+
+# Registration
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"displayName":"John Doe","email":"john@example.com","password":"Password123"}'
+
+# Login
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john@example.com","password":"Password123"}'
+```
+
+### Database Testing
+```bash
+# Test pgAdmin setup
+./test-pgadmin.sh
+
+# Direct database access
+docker-compose exec postgres psql -U postgres -d fittedin_dev
+```
+
+---
+
+## 🎯 Next Steps
+
+### Phase 1: Connection System (Current Focus)
+1. **User Discovery**: Implement user recommendation system
+2. **Connection Management**: Send/accept/reject connection requests
+3. **Social Features**: View connections' activities and progress
+
+### Phase 2: Enhanced Features
+1. **Activity Logging**: Record daily activities and progress
+2. **Progress Visualization**: Charts and reports
+3. **Community Support**: Group challenges and leaderboards
+
+### Phase 3: Advanced Features
+1. **Mobile Responsiveness**: Improve UI for mobile devices
+2. **Real-time Notifications**: Connection updates and achievements
+3. **Advanced Analytics**: Personalized insights and recommendations
 
 ---
 
@@ -259,6 +142,13 @@ node server.js
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+### Commit Convention
+- `feat:` new feature
+- `fix:` bug fix
+- `docs:` documentation changes
+- `refactor:` code refactoring
+- `test:` adding or updating tests
 
 ---
 
@@ -272,20 +162,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you encounter any issues:
 
-1. Check the [Troubleshooting](#-troubleshooting) section
+1. Check the [Troubleshooting](docs/development/DEVELOPMENT.md#common-issues) section
 2. Review the logs: `docker-compose logs postgres`
 3. Ensure all prerequisites are installed
 4. Try running the setup script again: `./setup.sh`
-5. Check that you're in the correct directory when running commands
 
 ---
 
-## 🎯 Next Steps
-
-Once the basic authentication is working, the team can work on:
-
-1. **Goal Management**: Create, update, and track user goals
-2. **Activity Logging**: Record daily activities and progress
-3. **Social Features**: User connections and networking
-4. **Progress Visualization**: Charts and reports
-5. **Mobile Responsiveness**: Improve UI for mobile devices
+**Happy coding! 🚀**
