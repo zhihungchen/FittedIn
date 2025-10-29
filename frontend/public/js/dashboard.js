@@ -40,6 +40,9 @@ async function loadDashboardData() {
         // Load recent activity
         loadRecentActivity();
 
+        // Load community data (mock data)
+        loadCommunityData();
+
     } catch (error) {
         console.error('Failed to load dashboard data:', error);
         // Only clear storage and redirect if it's actually an auth error
@@ -246,6 +249,293 @@ function capitalizeFirst(str) {
 
 // Use the global logout function from auth.js (already defined there)
 
+// ===== Community Features (Mock Data) =====
+
+// Mock data for activity feed
+function getMockActivityFeed() {
+    return [
+        {
+            id: 1,
+            userId: 2,
+            userName: 'Sarah Chen',
+            userAvatar: 'SC',
+            activity: 'Completed goal "Lose 10 kg"',
+            activityType: 'goal_completed',
+            timeAgo: '2h ago',
+            likes: 12,
+            comments: 3
+        },
+        {
+            id: 2,
+            userId: 3,
+            userName: 'Mike Johnson',
+            userAvatar: 'MJ',
+            activity: 'Updated fitness goal progress: 75% complete',
+            activityType: 'goal_progress',
+            timeAgo: '4h ago',
+            likes: 8,
+            comments: 1
+        },
+        {
+            id: 3,
+            userId: 4,
+            userName: 'Emily Rodriguez',
+            userAvatar: 'ER',
+            activity: 'Shared new activity: Ran 5 km',
+            activityType: 'activity_shared',
+            timeAgo: '6h ago',
+            likes: 15,
+            comments: 5
+        },
+        {
+            id: 4,
+            userId: 5,
+            userName: 'David Kim',
+            userAvatar: 'DK',
+            activity: 'Created new goal: "Exercise 5 times per week"',
+            activityType: 'goal_created',
+            timeAgo: '1d ago',
+            likes: 6,
+            comments: 2
+        },
+        {
+            id: 5,
+            userId: 6,
+            userName: 'Lisa Wang',
+            userAvatar: 'LW',
+            activity: 'Completed 7-day fitness challenge',
+            activityType: 'challenge_completed',
+            timeAgo: '1d ago',
+            likes: 20,
+            comments: 8
+        }
+    ];
+}
+
+// Mock data for connection suggestions
+function getMockConnectionSuggestions() {
+    return [
+        {
+            id: 7,
+            name: 'Alex Taylor',
+            avatar: 'AT',
+            location: 'New Jersey',
+            commonInterests: ['Weight Loss', 'Running'],
+            mutualConnections: 3
+        },
+        {
+            id: 8,
+            name: 'Jessica Brown',
+            avatar: 'JB',
+            location: 'New York',
+            commonInterests: ['Yoga', 'Meditation'],
+            mutualConnections: 2
+        },
+        {
+            id: 9,
+            name: 'Chris Lee',
+            avatar: 'CL',
+            location: 'New Jersey',
+            commonInterests: ['Strength Training', 'Nutrition'],
+            mutualConnections: 5
+        }
+    ];
+}
+
+// Mock data for connections
+function getMockConnections() {
+    return [
+        {
+            id: 10,
+            name: 'Sarah Chen',
+            avatar: 'SC',
+            location: 'New York',
+            recentActivity: 'Completed a goal 2h ago',
+            status: 'active'
+        },
+        {
+            id: 11,
+            name: 'Mike Johnson',
+            avatar: 'MJ',
+            location: 'New Jersey',
+            recentActivity: 'Shared activity today',
+            status: 'active'
+        },
+        {
+            id: 12,
+            name: 'Emily Rodriguez',
+            avatar: 'ER',
+            location: 'Boston',
+            recentActivity: 'Updated progress 1d ago',
+            status: 'active'
+        },
+        {
+            id: 13,
+            name: 'David Kim',
+            avatar: 'DK',
+            location: 'Philadelphia',
+            recentActivity: 'Created new goal 3d ago',
+            status: 'active'
+        }
+    ];
+}
+
+// Render activity feed
+function renderActivityFeed() {
+    const activityFeed = document.getElementById('activityFeed');
+    if (!activityFeed) return;
+
+    const activities = getMockActivityFeed();
+
+    if (activities.length === 0) {
+        activityFeed.innerHTML = '<div class="empty-state">No recent activity</div>';
+        return;
+    }
+
+    activityFeed.innerHTML = activities.map(activity => {
+        return `
+            <div class="activity-item-community">
+                <div class="activity-user-avatar">${activity.userAvatar}</div>
+                <div class="activity-content">
+                    <div class="activity-header">
+                        <strong>${activity.userName}</strong>
+                        <span class="activity-time">${activity.timeAgo}</span>
+                    </div>
+                    <div class="activity-text">${activity.activity}</div>
+                    <div class="activity-actions">
+                        <button class="btn-icon" title="Like">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                            <span>${activity.likes}</span>
+                        </button>
+                        <button class="btn-icon" title="Comment">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span>${activity.comments}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Render connection suggestions
+function renderConnectionSuggestions() {
+    const suggestionsContainer = document.getElementById('connectionSuggestions');
+    if (!suggestionsContainer) return;
+
+    const suggestions = getMockConnectionSuggestions();
+
+    if (suggestions.length === 0) {
+        suggestionsContainer.innerHTML = '<div class="empty-state">No suggestions available</div>';
+        return;
+    }
+
+    suggestionsContainer.innerHTML = suggestions.map(user => {
+        const commonInterests = user.commonInterests.join(', ');
+        return `
+            <div class="user-card-suggestion">
+                <div class="user-card-avatar">${user.avatar}</div>
+                <div class="user-card-info">
+                    <div class="user-card-name">${user.name}</div>
+                    <div class="user-card-location">${user.location}</div>
+                    <div class="user-card-common">
+                        <span class="common-interest">${commonInterests}</span>
+                        ${user.mutualConnections > 0 ? `<span class="mutual-connections">${user.mutualConnections} mutual connections</span>` : ''}
+                    </div>
+                </div>
+                <button class="btn-connect" data-user-id="${user.id}">
+                    <span>Connect</span>
+                </button>
+            </div>
+        `;
+    }).join('');
+
+    // Add click handlers for connect buttons (UI only)
+    suggestionsContainer.querySelectorAll('.btn-connect').forEach(btn => {
+        btn.addEventListener('click', function () {
+            this.innerHTML = '<span>Pending</span>';
+            this.disabled = true;
+            this.classList.add('sent');
+        });
+    });
+}
+
+// Render connections
+function renderConnections() {
+    const connectionsContainer = document.getElementById('yourConnections');
+    if (!connectionsContainer) return;
+
+    const connections = getMockConnections();
+
+    if (connections.length === 0) {
+        connectionsContainer.innerHTML = '<div class="empty-state">No connections yet</div>';
+        return;
+    }
+
+    connectionsContainer.innerHTML = connections.map(connection => {
+        return `
+            <div class="user-card-connection">
+                <div class="user-card-avatar">${connection.avatar}</div>
+                <div class="user-card-info">
+                    <div class="user-card-name">${connection.name}</div>
+                    <div class="user-card-location">${connection.location}</div>
+                    <div class="user-card-activity">${connection.recentActivity}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Load community data
+function loadCommunityData() {
+    try {
+        // Simulate loading delay
+        setTimeout(() => {
+            renderActivityFeed();
+            renderConnectionSuggestions();
+            renderConnections();
+        }, 800);
+    } catch (error) {
+        console.error('Failed to load community data:', error);
+    }
+}
+
+// Search box handler (UI only)
+function setupSearchBox() {
+    const searchBtn = document.getElementById('searchBtn');
+    const searchInput = document.getElementById('communitySearchInput');
+
+    if (searchBtn && searchInput) {
+        searchBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                // Visual feedback only
+                this.textContent = 'Searching...';
+                this.disabled = true;
+                setTimeout(() => {
+                    this.textContent = 'Search';
+                    this.disabled = false;
+                    // Show a temporary message (UI only)
+                    alert('Search functionality coming soon! You searched for: "' + query + '"');
+                    searchInput.value = '';
+                }, 1000);
+            }
+        });
+
+        // Allow Enter key to trigger search
+        searchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                searchBtn.click();
+            }
+        });
+    }
+}
+
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Dashboard: DOMContentLoaded event fired');
@@ -259,6 +549,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.logout();
         });
     }
+
+    // Setup search box
+    setupSearchBox();
 
     try {
         await loadDashboardData();

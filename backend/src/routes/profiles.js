@@ -22,13 +22,13 @@ router.get('/me', authenticateToken, profileController.getMyProfile);
 
 // Update current user's profile
 router.put('/me', authenticateToken, [
-    body('pronouns').optional().isLength({ max: 50 }),
-    body('bio').optional().isLength({ max: 1000 }),
-    body('location').optional().isLength({ max: 100 }),
-    body('date_of_birth').optional().isISO8601(),
-    body('height').optional().isInt({ min: 50, max: 300 }),
-    body('weight').optional().isFloat({ min: 10, max: 500 }),
-    body('fitness_level').optional().isIn(['beginner', 'intermediate', 'advanced']),
+    body('pronouns').optional({ checkFalsy: true }).trim().isLength({ max: 50 }),
+    body('bio').optional({ checkFalsy: true }).trim().isLength({ max: 1000 }),
+    body('location').optional({ checkFalsy: true }).trim().isLength({ max: 100 }),
+    body('date_of_birth').optional({ checkFalsy: true }).isISO8601().toDate(),
+    body('height').optional({ checkFalsy: true }).trim().toInt().isInt({ min: 50, max: 300 }),
+    body('weight').optional({ checkFalsy: true }).trim().toFloat().isFloat({ min: 10, max: 500 }),
+    body('fitness_level').optional({ checkFalsy: true }).trim().toLowerCase().isIn(['beginner', 'intermediate', 'advanced']),
     body('primary_goals').optional().isArray(),
     body('skills').optional().isArray(),
     body('privacy_settings').optional().isObject()

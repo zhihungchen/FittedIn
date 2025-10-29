@@ -102,7 +102,13 @@ const api = {
                         window.location.href = 'login.html';
                     }
                 }
-                throw new Error(data.message || 'An error occurred');
+
+                // Create error with validation details
+                const error = new Error(data.message || 'An error occurred');
+                if (data.errors) {
+                    error.validationErrors = data.errors;
+                }
+                throw error;
             }
 
             return data;

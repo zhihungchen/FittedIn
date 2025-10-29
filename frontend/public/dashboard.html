@@ -56,40 +56,94 @@
                 </div>
             </div>
 
-            <div class="dashboard-grid">
-                <div class="dashboard-card">
-                    <h3>Complete Your Profile</h3>
-                    <p id="profileCompletionText">Add your bio, goals, and preferences to get the most out of FittedIn
-                    </p>
-                    <div class="profile-preview" id="profilePreview" style="display: none;">
-                        <div class="preview-item">
-                            <strong>Location:</strong> <span id="userLocation">Not set</span>
+            <!-- Search Box -->
+            <div class="community-search-card search-top">
+                <div class="search-box">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" id="communitySearchInput" placeholder="Search users, goals, or activities..." />
+                    <button class="btn-search" id="searchBtn">Search</button>
+                </div>
+            </div>
+
+            <div class="dashboard-layout">
+                <!-- Left Column: Personal Info -->
+                <div class="dashboard-left">
+                    <div class="dashboard-grid">
+                        <div class="dashboard-card">
+                            <h3>Complete Your Profile</h3>
+                            <p id="profileCompletionText">Add your bio, goals, and preferences to get the most out of
+                                FittedIn
+                            </p>
+                            <div class="profile-preview" id="profilePreview" style="display: none;">
+                                <div class="preview-item">
+                                    <strong>Location:</strong> <span id="userLocation">Not set</span>
+                                </div>
+                                <div class="preview-item">
+                                    <strong>Fitness Level:</strong> <span id="userFitnessLevel">Not set</span>
+                                </div>
+                            </div>
+                            <a href="profile.html" class="btn-primary">Edit Profile</a>
                         </div>
-                        <div class="preview-item">
-                            <strong>Fitness Level:</strong> <span id="userFitnessLevel">Not set</span>
+
+                        <div class="dashboard-card">
+                            <h3>Your Goals</h3>
+                            <p id="goalsSummaryText">Set and track your wellness goals</p>
+                            <div class="goals-preview" id="goalsPreview" style="display: none;">
+                                <div class="preview-item">
+                                    <strong>Active Goals:</strong> <span id="activeGoalsCount">0</span>
+                                </div>
+                                <div class="preview-item">
+                                    <strong>Latest:</strong> <span id="latestGoal">None</span>
+                                </div>
+                            </div>
+                            <a href="goals.html" class="btn-primary">Manage Goals</a>
                         </div>
                     </div>
-                    <a href="profile.html" class="btn-primary">Edit Profile</a>
                 </div>
 
-                <div class="dashboard-card">
-                    <h3>Your Goals</h3>
-                    <p id="goalsSummaryText">Set and track your wellness goals</p>
-                    <div class="goals-preview" id="goalsPreview" style="display: none;">
-                        <div class="preview-item">
-                            <strong>Active Goals:</strong> <span id="activeGoalsCount">0</span>
+                <!-- Right Column: Community Section -->
+                <div class="dashboard-right">
+                    <div class="community-section">
+                        <!-- Activity Feed -->
+                        <div class="community-card">
+                            <div class="community-card-header">
+                                <h3>Activity Feed</h3>
+                            </div>
+                            <div class="activity-feed" id="activityFeed">
+                                <div class="loading-state">Loading...</div>
+                            </div>
                         </div>
-                        <div class="preview-item">
-                            <strong>Latest:</strong> <span id="latestGoal">None</span>
+
+                        <!-- Connection Suggestions -->
+                        <div class="community-card">
+                            <div class="community-card-header">
+                                <h3>People you may know</h3>
+                            </div>
+                            <div class="connection-suggestions" id="connectionSuggestions">
+                                <div class="loading-state">Loading...</div>
+                            </div>
+                        </div>
+
+                        <!-- Your Connections -->
+                        <div class="community-card">
+                            <div class="community-card-header">
+                                <h3>Your Connections</h3>
+                                <a href="#" class="view-all-link">See all</a>
+                            </div>
+                            <div class="connection-list" id="yourConnections">
+                                <div class="loading-state">Loading...</div>
+                            </div>
                         </div>
                     </div>
-                    <a href="goals.html" class="btn-primary">Manage Goals</a>
                 </div>
             </div>
 
             <!-- Recent Activity -->
             <div class="recent-activity" id="recentActivity" style="display: none;">
-                <h3>📈 Your Progress</h3>
+                <h3>Your Progress</h3>
                 <div id="activityList"></div>
             </div>
         </div>
@@ -178,6 +232,13 @@
             margin-bottom: 0.5rem;
             background: #f8f9fa;
             border-radius: 4px;
+        }
+
+        /* Responsive adjustments for dashboard layout */
+        @media (max-width: 1024px) {
+            .dashboard-layout {
+                grid-template-columns: 1fr !important;
+            }
         }
     </style>
 
