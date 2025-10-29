@@ -1,4 +1,4 @@
-// ===== Profile Page JavaScript =====
+// ===== Profile Page JavaScript - Using Modular Components =====
 
 class ProfileManager {
     constructor() {
@@ -6,6 +6,13 @@ class ProfileManager {
         this.currentTab = 'overview';
         this.isEditing = false;
         this.currentEditSection = null;
+
+        // Initialize modular components
+        this.skillsSection = null;
+        this.achievementsSection = null;
+        this.goalsPreview = null;
+        this.profileHeader = null;
+        this.completionVisual = null;
 
         this.init();
     }
@@ -15,6 +22,9 @@ class ProfileManager {
         if (!this.checkAuth()) {
             return;
         }
+
+        // Initialize modular components
+        this.initializeComponents();
 
         // Set a timeout to ensure content shows even if API hangs
         const loadingTimeout = setTimeout(() => {
@@ -36,6 +46,24 @@ class ProfileManager {
         this.initializeUI();
     }
 
+    initializeComponents() {
+        // Initialize modular components (with error handling)
+        try {
+            if (window.ProfileModules) {
+                this.skillsSection = new window.ProfileModules.SkillsSection('displaySkills');
+                this.achievementsSection = new window.ProfileModules.AchievementsSection('displayAchievements');
+                this.goalsPreview = new window.ProfileModules.GoalsPreview('displayGoals');
+                this.profileHeader = new window.ProfileModules.UserProfileHeader('profileHeaderContainer', true);
+                this.completionVisual = new window.ProfileModules.ProfileCompletionVisual('completionCircle');
+            } else {
+                console.warn('ProfileModules not loaded yet, will retry after modules load');
+            }
+        } catch (error) {
+            console.error('Error initializing components:', error);
+            // Continue without modules - they're optional enhancements
+        }
+    }
+
     checkAuth() {
         return authState.isAuthenticated();
     }
@@ -53,11 +81,29 @@ class ProfileManager {
             this.currentProfile = response.data ? response.data.profile : response.profile;
 
             if (!this.currentProfile) {
-                throw new Error('Profile data not found in response');
+                console.warn('Profile data not found, creating fallback');
+                // Create a minimal profile structure
+                const userId = authState.getUserId();
+                this.currentProfile = {
+                    user: {
+                        email: authState.getUserId() || 'user@example.com',
+                        display_name: 'User'
+                    },
+                    location: '',
+                    bio: '',
+                    pronouns: '',
+                    date_of_birth: '',
+                    fitness_level: '',
+                    height: null,
+                    weight: null,
+                    skills: [],
+                    primary_goals: [],
+                    created_at: new Date().toISOString()
+                };
             }
 
             try {
-                this.updateProfileDisplay();
+                await this.updateProfileDisplay();
                 this.calculateCompletionScore();
             } catch (displayError) {
                 console.error('Error updating display:', displayError);
@@ -67,15 +113,15 @@ class ProfileManager {
             this.showError(`Failed to load profile: ${error.message}`);
 
             // Only clear storage and redirect if it's actually an auth error
-            if (error.message.includes('token') || error.message.includes('unauthorized') || error.response?.status === 401) {
+            if (error.message && (error.message.includes('token') || error.message.includes('unauthorized'))) {
                 console.log('Authentication error detected, logging out');
-                if (error.message.includes('token') || error.message.includes('unauthorized')) {
-                    setTimeout(() => window.logout(), 3000);
-                }
+                setTimeout(() => {
+                    if (window.logout) window.logout();
+                }, 3000);
             } else {
                 // For other errors, create fallback profile
                 const userId = authState.getUserId();
-                if (userId && !this.currentProfile) {
+                if (userId) {
                     this.currentProfile = {
                         user: {
                             email: 'user@example.com',
@@ -93,7 +139,7 @@ class ProfileManager {
                         created_at: new Date().toISOString()
                     };
                     try {
-                        this.updateProfileDisplay();
+                        await this.updateProfileDisplay();
                         this.calculateCompletionScore();
                     } catch (displayError) {
                         console.error('Error updating fallback display:', displayError);
@@ -102,98 +148,236 @@ class ProfileManager {
             }
         } finally {
             // ALWAYS hide loading state when done, whether successful or not
+            console.log('[loadProfile] Finally block: hiding loading state');
+
+            // Multiple attempts to ensure loading is hidden
+            setTimeout(() => {
+                console.log('[loadProfile] Timeout: forcing loading state to hide');
+                this.showLoading(false);
+
+                // Also directly manipulate DOM as backup
+                const loadingState = document.getElementById('loadingState');
+                const profileContent = document.getElementById('profileContent');
+                if (loadingState) {
+                    loadingState.classList.add('hidden');
+                    loadingState.style.display = 'none';
+                }
+                if (profileContent) {
+                    profileContent.classList.remove('hidden');
+                    profileContent.style.display = 'block';
+                }
+            }, 100);
+
+            // Immediate hide
             this.showLoading(false);
         }
     }
 
-    updateProfileDisplay() {
-        if (!this.currentProfile) return;
+    async updateProfileDisplay() {
+        if (!this.currentProfile) {
+            console.warn('No profile data to display');
+            return;
+        }
 
-        const profile = this.currentProfile;
-        const user = profile.user || {};
+        try {
+            const profile = this.currentProfile;
+            const user = profile.user || {};
 
-        // Update header
-        this.updateElement('profileName', user.display_name || 'User');
-        this.updateElement('profileEmail', user.email || 'user@example.com');
-        this.updateElement('profileLocation', profile.location || 'Location not set');
+            // Update header elements directly (with null checks)
+            this.updateElement('profileName', user.display_name || 'User');
+            this.updateElement('profileHeadline', this.getHeadline(profile));
+            this.updateElement('profileLocation', profile.location || 'Location not set');
+            this.updateElement('memberSince', this.formatMemberSince(profile.created_at));
+            this.updateElement('contactEmail', user.email || 'user@example.com');
+            this.updateElement('contactLocation', profile.location || 'Location not set');
 
-        // Update avatar
-        this.updateAvatar(user.display_name || 'User', user.avatar_url);
+            // Update avatar
+            try {
+                this.updateAvatar(user.display_name || 'User', user.avatar_url);
+            } catch (avatarError) {
+                console.error('Error updating avatar:', avatarError);
+            }
 
-        // Update member since
-        this.updateElement('memberSince', this.formatMemberSince(profile.created_at));
+            // Update bio
+            const bioElement = document.getElementById('profileBio');
+            if (bioElement) {
+                bioElement.textContent = profile.bio || 'No bio available. Add a bio to tell others about your wellness journey.';
+            }
 
-        // Update overview tab content
-        this.updateOverviewTab(profile);
+            // Update skills using module (with fallback)
+            try {
+                if (this.skillsSection) {
+                    this.skillsSection.render(profile.skills || []);
+                } else if (window.ProfileModules) {
+                    // Try to initialize if modules are now available
+                    this.skillsSection = new window.ProfileModules.SkillsSection('displaySkills');
+                    this.skillsSection.render(profile.skills || []);
+                }
+            } catch (skillsError) {
+                console.error('Error rendering skills:', skillsError);
+                // Fallback rendering
+                const skillsContainer = document.getElementById('displaySkills');
+                if (skillsContainer) {
+                    const skills = profile.skills || [];
+                    if (skills.length === 0) {
+                        skillsContainer.innerHTML = '<div class="empty-skills"><i class="icon-skills"></i><p>No skills added yet</p></div>';
+                    } else {
+                        skillsContainer.innerHTML = skills.map(skill =>
+                            `<div class="skill-item"><div class="skill-badge"><span class="skill-name">${skill}</span></div></div>`
+                        ).join('');
+                    }
+                }
+            }
 
-        // Update settings
-        this.updateSettings(profile);
+            // Load goals for achievements and goals preview
+            let goals = [];
+            try {
+                const goalsResponse = await api.goals.getAll();
+                goals = goalsResponse.data?.goals || goalsResponse.goals || [];
+            } catch (error) {
+                console.warn('Could not load goals for achievements:', error);
+            }
+
+            // Update achievements using module (with fallback)
+            try {
+                if (this.achievementsSection) {
+                    this.achievementsSection.render([], goals);
+                } else if (window.ProfileModules) {
+                    this.achievementsSection = new window.ProfileModules.AchievementsSection('displayAchievements');
+                    this.achievementsSection.render([], goals);
+                }
+            } catch (achError) {
+                console.error('Error rendering achievements:', achError);
+            }
+
+            // Update goals preview using module (with fallback)
+            try {
+                if (this.goalsPreview) {
+                    this.goalsPreview.render(goals);
+                } else if (window.ProfileModules) {
+                    this.goalsPreview = new window.ProfileModules.GoalsPreview('displayGoals');
+                    this.goalsPreview.render(goals);
+                }
+            } catch (goalsError) {
+                console.error('Error rendering goals:', goalsError);
+            }
+
+            // Update activity stats
+            try {
+                this.updateActivityStats(goals);
+            } catch (statError) {
+                console.error('Error updating activity stats:', statError);
+            }
+
+            // Update sidebar info
+            try {
+                this.updateSidebarInfo(profile);
+            } catch (sidebarError) {
+                console.error('Error updating sidebar:', sidebarError);
+            }
+
+            // Update settings (optional, might not exist)
+            try {
+                this.updateSettings(profile);
+            } catch (settingsError) {
+                // Settings might not be needed in new design
+                console.warn('Settings update skipped:', settingsError);
+            }
+        } catch (error) {
+            console.error('Error in updateProfileDisplay:', error);
+            throw error; // Re-throw to be caught by caller
+        }
+    }
+
+    getHeadline(profile) {
+        if (profile.bio && profile.bio.length > 0) {
+            return profile.bio.substring(0, 100) + (profile.bio.length > 100 ? '...' : '');
+        }
+
+        const skills = profile.skills || [];
+        if (skills.length > 0) {
+            return `${skills.length} skill${skills.length > 1 ? 's' : ''} • Wellness Professional`;
+        }
+
+        return 'Wellness Enthusiast';
+    }
+
+    updateActivityStats(goals) {
+        const completedGoals = goals.filter(g => g.status === 'completed');
+        const activeDays = this.calculateActiveDays(goals);
+
+        this.updateElement('goalsCompletedValue', completedGoals.length);
+        this.updateElement('activeDaysValue', activeDays);
+        this.updateElement('achievementsValue', completedGoals.length >= 1 ? completedGoals.length : 0);
+    }
+
+    calculateActiveDays(goals) {
+        // Simple calculation - could be enhanced with actual activity logs
+        const uniqueDates = new Set();
+        goals.forEach(goal => {
+            if (goal.created_at) {
+                uniqueDates.add(new Date(goal.created_at).toDateString());
+            }
+            if (goal.updated_at) {
+                uniqueDates.add(new Date(goal.updated_at).toDateString());
+            }
+        });
+        return uniqueDates.size;
+    }
+
+    updateSidebarInfo(profile) {
+        this.updateElement('sidebarFitnessLevel', profile.fitness_level ?
+            this.capitalizeFirst(profile.fitness_level) : '-');
+        this.updateElement('sidebarHeight', profile.height ?
+            `${profile.height} cm` : '-');
+        this.updateElement('sidebarWeight', profile.weight ?
+            `${profile.weight} kg` : '-');
+
+        const bmi = this.calculateBMI(profile.height, profile.weight);
+        this.updateElement('sidebarBMI', bmi ? bmi.toFixed(1) : '-');
+
+        // Update pronouns
+        const pronounsElement = document.getElementById('contactPronouns');
+        const pronounsText = document.getElementById('contactPronounsText');
+        if (pronounsElement && pronounsText) {
+            if (profile.pronouns) {
+                pronounsElement.style.display = 'flex';
+                pronounsText.textContent = profile.pronouns;
+            } else {
+                pronounsElement.style.display = 'none';
+            }
+        }
     }
 
     updateAvatar(name, avatarUrl) {
         const avatarElement = document.getElementById('profileAvatar');
         const initialsElement = document.getElementById('avatarInitials');
 
+        if (!avatarElement) return;
+
         if (avatarUrl) {
-            avatarElement.innerHTML = `<img src="${avatarUrl}" alt="${name}">`;
+            // Clear initials and add image
+            if (initialsElement) initialsElement.style.display = 'none';
+            const img = document.createElement('img');
+            img.src = avatarUrl;
+            img.alt = name;
+            avatarElement.appendChild(img);
         } else {
-            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
-            initialsElement.textContent = initials;
+            // Remove any existing image
+            const existingImg = avatarElement.querySelector('img');
+            if (existingImg) existingImg.remove();
+
+            // Show initials
+            if (initialsElement) {
+                initialsElement.style.display = 'flex';
+                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                initialsElement.textContent = initials;
+            }
         }
     }
 
-    updateOverviewTab(profile) {
-        // Basic information
-        this.updateElement('displayPronouns', profile.pronouns || 'Not specified');
-        this.updateElement('displayLocation', profile.location || 'Not specified');
-        this.updateElement('displayDateOfBirth', profile.date_of_birth ?
-            new Date(profile.date_of_birth).toLocaleDateString() : 'Not specified');
-        this.updateElement('displayFitnessLevel', profile.fitness_level ?
-            this.capitalizeFirst(profile.fitness_level) : 'Not specified');
-        this.updateElement('displayBio', profile.bio || 'No bio available');
-
-        // Physical information
-        this.updateElement('displayHeight', profile.height ?
-            `${profile.height} cm` : 'Not specified');
-        this.updateElement('displayWeight', profile.weight ?
-            `${profile.weight} kg` : 'Not specified');
-
-        // Calculate and display BMI
-        const bmi = this.calculateBMI(profile.height, profile.weight);
-        this.updateElement('displayBMI', bmi ? bmi.toFixed(1) : 'Not calculated');
-
-        // Skills
-        this.updateSkillsDisplay(profile.skills || []);
-
-        // Goals
-        this.updateGoalsDisplay(profile.primary_goals || []);
-    }
-
-    updateSkillsDisplay(skills) {
-        const container = document.getElementById('displaySkills');
-
-        if (skills.length === 0) {
-            container.innerHTML = '<p class="no-data">No skills added yet</p>';
-            return;
-        }
-
-        container.innerHTML = skills.map(skill =>
-            `<span class="skill-tag">${this.capitalizeFirst(skill.replace('_', ' '))}</span>`
-        ).join('');
-    }
-
-    updateGoalsDisplay(goals) {
-        const container = document.getElementById('displayGoals');
-
-        if (goals.length === 0) {
-            container.innerHTML = '<p class="no-data">No goals set yet</p>';
-            return;
-        }
-
-        container.innerHTML = goals.map(goal =>
-            `<span class="goal-tag">${this.capitalizeFirst(goal.replace('_', ' '))}</span>`
-        ).join('');
-    }
+    // Removed updateOverviewTab, updateSkillsDisplay, updateGoalsDisplay
+    // Now handled by modular components in updateProfileDisplay()
 
     updateSettings(profile) {
         const privacySettings = profile.privacy_settings || {};
@@ -233,16 +417,56 @@ class ProfileManager {
         const percentage = Math.min(score, maxScore);
 
         this.updateElement('profileCompletion', `${percentage}%`);
-        this.updateElement('completionPercentage', `${percentage}%`);
 
-        const fillElement = document.getElementById('completionFill');
-        if (fillElement) {
-            fillElement.style.width = `${percentage}%`;
+        // Update circular completion visual
+        if (this.completionVisual) {
+            this.completionVisual.update(percentage);
+            const tips = this.getCompletionTips(percentage);
+            this.completionVisual.updateTips(tips);
+        } else {
+            // Fallback to old method
+            this.updateElement('completionPercentage', `${percentage}%`);
+            const fillElement = document.getElementById('completionFill');
+            if (fillElement) {
+                fillElement.style.width = `${percentage}%`;
+            }
+            this.updateCompletionTips(percentage);
         }
 
-        this.updateCompletionTips(percentage);
-
         return percentage;
+    }
+
+    getCompletionTips(percentage) {
+        const tips = [];
+        const profile = this.currentProfile;
+
+        if (!profile.location) {
+            tips.push('Add your location to connect with nearby members');
+        }
+        if (!profile.bio || profile.bio.length < 50) {
+            tips.push('Write a bio (50+ characters) to introduce yourself');
+        }
+        if (!profile.fitness_level) {
+            tips.push('Set your fitness level to personalize your experience');
+        }
+        if (!profile.height || !profile.weight) {
+            tips.push('Add your height and weight to track your BMI');
+        }
+        if (!profile.skills || profile.skills.length === 0) {
+            tips.push('Add wellness skills to showcase your expertise');
+        }
+        if (!profile.primary_goals || profile.primary_goals.length === 0) {
+            tips.push('Set primary goals to start your wellness journey');
+        }
+
+        if (percentage >= 100 || tips.length === 0) {
+            tips.push('Congratulations! Your profile is complete.');
+        } else if (tips.length > 3) {
+            tips.splice(0, tips.length);
+            tips.push('Complete key sections: location, bio, fitness level, and goals');
+        }
+
+        return tips;
     }
 
     updateCompletionTips(percentage) {
@@ -315,13 +539,20 @@ class ProfileManager {
     }
 
     updateElement(id, value) {
+        if (!id) return;
         const element = document.getElementById(id);
         if (element) {
-            if (typeof value === 'boolean') {
-                element.checked = value;
-            } else {
-                element.textContent = value;
+            try {
+                if (typeof value === 'boolean') {
+                    element.checked = value;
+                } else {
+                    element.textContent = value;
+                }
+            } catch (error) {
+                console.warn(`Error updating element ${id}:`, error);
             }
+        } else {
+            console.warn(`Element with id "${id}" not found`);
         }
     }
 
@@ -347,17 +578,23 @@ class ProfileManager {
             shareBtn.addEventListener('click', () => this.shareProfile());
         }
 
-        // Tab switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
+        // Tab switching (removed - no tabs in new design)
+        // Tab functionality removed in LinkedIn-style redesign
+
+        // Section edit buttons (inline edit buttons)
+        document.querySelectorAll('.btn-edit-inline').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const tab = e.currentTarget.dataset.tab;
-                this.switchTab(tab);
+                const section = e.currentTarget.dataset.section;
+                if (section) {
+                    this.editSection(section);
+                }
             });
         });
 
-        // Section edit buttons
-        document.querySelectorAll('.btn-edit-section').forEach(btn => {
+        // Link buttons for adding content
+        document.querySelectorAll('.btn-link[data-section]').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.preventDefault();
                 const section = e.currentTarget.dataset.section;
                 if (section) {
                     this.editSection(section);
@@ -445,10 +682,7 @@ class ProfileManager {
     }
 
     initializeUI() {
-        // Set initial tab
-        this.switchTab('overview');
-
-        // Initialize completion score
+        // Initialize completion score (no tabs in new design)
         this.calculateCompletionScore();
 
         // Close modal when clicking outside
@@ -473,56 +707,8 @@ class ProfileManager {
     }
 
     // ===== Tab Management =====
-    switchTab(tabName) {
-        // Update tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-
-        // Update tab panels
-        document.querySelectorAll('.tab-panel').forEach(panel => {
-            panel.classList.remove('active');
-        });
-        document.getElementById(`${tabName}Tab`).classList.add('active');
-
-        this.currentTab = tabName;
-
-        // Load tab-specific data
-        this.loadTabData(tabName);
-    }
-
-    loadTabData(tabName) {
-        switch (tabName) {
-            case 'goals':
-                this.loadGoalsData();
-                break;
-            case 'activity':
-                this.loadActivityData();
-                break;
-            case 'settings':
-                this.loadSettingsData();
-                break;
-        }
-    }
-
-    loadGoalsData() {
-        // This would typically load goals from the API
-        // For now, we'll show the empty state
-        const goalsList = document.getElementById('goalsList');
-        if (goalsList && goalsList.querySelector('.empty-state')) {
-            // Goals are already loaded in the HTML
-        }
-    }
-
-    loadActivityData() {
-        // This would typically load activity data from the API
-        // For now, we'll show placeholder data
-    }
-
-    loadSettingsData() {
-        // Settings are already loaded in updateSettings()
-    }
+    // Tab functionality removed in LinkedIn-style redesign
+    // All content is now displayed in a single scrollable view
 
     // ===== Edit Mode =====
     toggleEditMode() {
@@ -564,6 +750,13 @@ class ProfileManager {
 
     generateFormContent(section) {
         const forms = {
+            about: `
+                <div class="form-group">
+                    <label for="bio">About</label>
+                    <textarea id="bio" name="bio" rows="6" placeholder="Tell others about your wellness journey, goals, and what motivates you..."></textarea>
+                    <small style="color: rgba(0,0,0,0.6); display: block; margin-top: 4px;">Write a compelling bio to help others get to know you better.</small>
+                </div>
+            `,
             basic: `
                 <div class="form-group">
                     <label for="pronouns">Pronouns</label>
@@ -616,6 +809,21 @@ class ProfileManager {
                         ${this.generateGoalCheckboxes()}
                     </div>
                 </div>
+            `,
+            achievements: `
+                <div class="form-group">
+                    <p style="color: rgba(0,0,0,0.6); margin-bottom: 1rem;">
+                        Achievements are automatically generated when you complete goals! Keep working towards your goals to earn achievements.
+                    </p>
+                    <div style="padding: 1rem; background: #fff9e6; border-radius: 8px; border-left: 4px solid #ffc107;">
+                        <strong>Current Achievements:</strong>
+                        <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                            <li>Complete your first goal to earn "Goal Achiever"</li>
+                            <li>Complete 5 goals to earn "Goal Master"</li>
+                            <li>Complete 10 goals to earn "Goal Champion"</li>
+                        </ul>
+                    </div>
+                </div>
             `
         };
 
@@ -656,6 +864,9 @@ class ProfileManager {
         const profile = this.currentProfile;
 
         switch (section) {
+            case 'about':
+                this.setFormValue('bio', profile.bio || '');
+                break;
             case 'basic':
                 this.setFormValue('pronouns', profile.pronouns || '');
                 this.setFormValue('location', profile.location || '');
@@ -701,9 +912,21 @@ class ProfileManager {
                 return;
             }
 
-            // Collect form data
+            // Collect form data with proper type conversion
             for (let [key, value] of formData.entries()) {
-                data[key] = value;
+                // Skip empty strings for optional fields
+                if (value === '' || value === null) {
+                    continue;
+                }
+
+                // Convert numeric fields to proper types
+                if (key === 'height') {
+                    data[key] = parseInt(value, 10);
+                } else if (key === 'weight') {
+                    data[key] = parseFloat(value);
+                } else {
+                    data[key] = value;
+                }
             }
 
             // Collect checkboxes
@@ -713,6 +936,12 @@ class ProfileManager {
             } else if (this.currentEditSection === 'goals') {
                 data.primary_goals = Array.from(document.querySelectorAll('input[id^="goal_"]:checked'))
                     .map(cb => cb.value);
+            } else if (this.currentEditSection === 'about') {
+                // About section only updates bio
+                const bio = formData.get('bio');
+                if (bio) {
+                    data.bio = bio;
+                }
             }
 
             // Disable save button and show loading
@@ -728,7 +957,7 @@ class ProfileManager {
             this.currentProfile = response.data ? response.data.profile : response.profile;
 
             // Update display
-            this.updateProfileDisplay();
+            await this.updateProfileDisplay();
             this.calculateCompletionScore();
 
             // Close modal
@@ -737,7 +966,20 @@ class ProfileManager {
             this.showSuccess('Profile updated successfully!');
         } catch (error) {
             console.error('Failed to update profile:', error);
-            this.showError(`Failed to update profile: ${error.message}`);
+
+            // Show validation errors if available
+            let errorMessage = error.message;
+            if (error.validationErrors && Array.isArray(error.validationErrors)) {
+                const validationMessages = error.validationErrors.map(err => {
+                    // Format express-validator error messages
+                    const field = err.param || err.path || 'field';
+                    const msg = err.msg || err.message || 'Invalid value';
+                    return `${field}: ${msg}`;
+                });
+                errorMessage = `Validation failed:\n${validationMessages.join('\n')}`;
+            }
+
+            this.showError(`Failed to update profile: ${errorMessage}`);
         } finally {
             // Re-enable save button
             const saveBtn = document.getElementById('saveProfileChangesBtn');
@@ -771,6 +1013,7 @@ class ProfileManager {
                 }
                 break;
 
+            case 'about':
             case 'basic':
                 const bio = document.getElementById('bio')?.value;
                 if (bio && bio.length > 1000) {
@@ -829,23 +1072,52 @@ class ProfileManager {
 
     // ===== Utility Functions =====
     showLoading(show) {
-        console.log('showLoading called with:', show);
+        console.log('[showLoading] called with:', show);
+
         const loadingState = document.getElementById('loadingState');
         const profileContent = document.getElementById('profileContent');
 
+        console.log('[showLoading] Elements found:', {
+            loadingState: !!loadingState,
+            profileContent: !!profileContent
+        });
+
+        if (!loadingState) {
+            console.error('[showLoading] loadingState element not found!');
+        }
+
+        if (!profileContent) {
+            console.error('[showLoading] profileContent element not found!');
+        }
+
         if (!loadingState || !profileContent) {
-            console.error('Loading state elements not found:', { loadingState, profileContent });
+            console.error('[showLoading] Missing required elements, cannot update loading state');
             return;
         }
 
-        if (show) {
-            loadingState.classList.remove('hidden');
-            profileContent.classList.add('hidden');
-            console.log('Showing loading state');
-        } else {
-            loadingState.classList.add('hidden');
-            profileContent.classList.remove('hidden');
-            console.log('Hiding loading state, showing profile content');
+        try {
+            if (show) {
+                loadingState.classList.remove('hidden');
+                profileContent.classList.add('hidden');
+                console.log('[showLoading] Showing loading state');
+            } else {
+                loadingState.classList.add('hidden');
+                profileContent.classList.remove('hidden');
+                console.log('[showLoading] Hiding loading state, showing profile content');
+            }
+        } catch (error) {
+            console.error('[showLoading] Error updating loading state:', error);
+            // Force hide by directly setting display style
+            try {
+                if (!show && loadingState) {
+                    loadingState.style.display = 'none';
+                }
+                if (!show && profileContent) {
+                    profileContent.style.display = 'block';
+                }
+            } catch (forceError) {
+                console.error('[showLoading] Failed to force update:', forceError);
+            }
         }
     }
 
@@ -905,14 +1177,7 @@ let profileManager;
 
 // Logout handled by global window.logout function from auth.js
 
-window.switchTab = function (tabName) {
-    console.log('switchTab called with:', tabName);
-    if (profileManager) {
-        profileManager.switchTab(tabName);
-    } else {
-        console.error('ProfileManager not initialized');
-    }
-};
+// window.switchTab removed - tabs no longer used in LinkedIn-style design
 
 window.toggleEditMode = function () {
     console.log('toggleEditMode called');
