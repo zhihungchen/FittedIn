@@ -4,6 +4,9 @@
 > Group 1: Chih-hung Chen, Haoyang Guo, Alaric Li, Yixiao Xiao, Adam Ashby, Carlos Ortiz, Kelvin Ihezue  
 > Semester: Fall 2025
 
+[![Test](https://github.com/zhihungchen/FittedIn/actions/workflows/test.yml/badge.svg)](https://github.com/zhihungchen/FittedIn/actions/workflows/test.yml)
+[![Deploy](https://github.com/zhihungchen/FittedIn/actions/workflows/deploy.yml/badge.svg)](https://github.com/zhihungchen/FittedIn/actions/workflows/deploy.yml)
+
 ---
 
 ## 📖 Overview
@@ -32,6 +35,8 @@ Most health applications are **data-driven** — they count steps, calories, or 
 - **pgAdmin Interface**: Web-based database management at `http://localhost:5050`
 - **PostgreSQL**: Robust relational database with proper indexing
 - **Migration System**: Automated database schema management
+- **Database Seeding**: Generate fake data with Faker.js for testing and development
+- **Auto-Accept Connections**: Seeded users automatically accept connection requests for better testing experience
 
 ---
 
@@ -82,6 +87,14 @@ node server.js
 - [Authentication](docs/features/AUTH_FIX_SUMMARY.md) - Auth system documentation
 
 ### 🚀 Deployment
+- [DevOps Guide](docs/deployment/DEVOPS_GUIDE.md) - **Complete CI/CD and DevOps documentation**
+- [GitHub Secrets Setup](docs/deployment/GITHUB_SECRETS_SETUP.md) - Configure GitHub Secrets for CI/CD
+- [CI/CD Pipeline](docs/deployment/CI_CD_PIPELINE.md) - Automated deployment with GitHub Actions
+- [AWS EC2 Deployment Guide](docs/deployment/AWS_EC2_DEPLOYMENT.md) - Complete production deployment guide
+- [AWS RDS Setup](docs/deployment/AWS_RDS_SETUP.md) - PostgreSQL database configuration
+- [SSL Certificate Setup](docs/deployment/SSL_SETUP.md) - Let's Encrypt SSL configuration
+- [Monitoring & Alerting](docs/deployment/MONITORING_AND_ALERTING.md) - CloudWatch monitoring setup
+- [Auto Scaling](docs/deployment/AUTO_SCALING.md) - EC2 Auto Scaling configuration
 - [Midterm Summary](docs/deployment/MIDTERM_SUMMARY.md) - Project progress summary
 - [Presentation Checklist](docs/deployment/MIDTERM_PRESENTATION_CHECKLIST.md) - Demo preparation
 
@@ -113,6 +126,21 @@ curl -X POST http://localhost:3000/api/auth/login \
 # Direct database access
 docker-compose exec postgres psql -U postgres -d fittedin_dev
 ```
+
+### Database Seeding
+```bash
+# Seed database with fake data (50 users, goals, posts, connections, etc.)
+cd backend
+npm run db:seed:faker
+
+# Clear existing data and seed fresh data
+npm run db:seed:clear
+
+# Custom amounts
+SEED_NUM_USERS=100 SEED_NUM_POSTS=300 npm run db:seed:faker
+```
+
+**Note:** All seeded users have password: `Password123!`
 
 ---
 
