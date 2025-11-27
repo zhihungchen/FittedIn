@@ -146,20 +146,36 @@ jobs:
             # Install backend dependencies
             echo "📦 Installing backend dependencies..."
             cd backend
+            
+            # Verify ecosystem.config.js exists
+            if [ ! -f "ecosystem.config.js" ]; then
+              echo "❌ ecosystem.config.js not found in backend directory"
+              echo "Current directory: $(pwd)"
+              echo "Files in current directory:"
+              ls -la
+              exit 1
+            fi
+            echo "✅ Found ecosystem.config.js"
+            
             npm install --production
             
             # Run database migrations
             echo "🗄️ Running database migrations..."
             npm run db:migrate || echo "⚠️ Migration failed, continuing..."
             
+            # Ensure logs directory exists
+            mkdir -p logs
+            
             # Restart application with PM2
             echo "🔄 Restarting application..."
             if command -v pm2 &> /dev/null; then
-              pm2 restart fittedin-backend || pm2 start ecosystem.config.js --env production || {
-                echo "⚠️ PM2 restart failed, trying fresh start..."
-                sudo npm install -g pm2
-                pm2 start ecosystem.config.js --env production
-              }
+              # Stop existing instance if running
+              pm2 stop fittedin-backend 2>/dev/null || true
+              pm2 delete fittedin-backend 2>/dev/null || true
+              
+              # Start with ecosystem config
+              echo "Starting PM2 with ecosystem.config.js from $(pwd)"
+              pm2 start ecosystem.config.js --env production
               pm2 save
             else
               echo "⚠️ PM2 not installed, installing..."
@@ -167,6 +183,9 @@ jobs:
               pm2 start ecosystem.config.js --env production
               pm2 save
             fi
+            
+            # Show PM2 status
+            pm2 status
             
             # Reload Nginx
             echo "🌐 Reloading Nginx..."
