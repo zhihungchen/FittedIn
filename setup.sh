@@ -175,66 +175,18 @@ if [ "$IS_EC2" = true ]; then
         pm2 startup systemd -u $ACTUAL_USER --hp /home/$ACTUAL_USER || true
     fi
     
-    # Copy Nginx configuration
-    echo -e "\n${GREEN}🌐 Configuring Nginx...${NC}"
-    
-    # Check if SSL certificate exists (for HTTPS config)
-    SSL_CERT_PATH="/etc/letsencrypt/live"
-    USE_SSL=false
-    
-    # Try to detect if SSL is configured (check for any domain certificate)
-    if [ -d "$SSL_CERT_PATH" ] && [ "$(ls -A $SSL_CERT_PATH 2>/dev/null)" ]; then
-        # Find first available certificate
-        for cert_dir in $SSL_CERT_PATH/*/; do
-            if [ -f "${cert_dir}fullchain.pem" ] && [ -f "${cert_dir}privkey.pem" ]; then
-                USE_SSL=true
-                CERT_DOMAIN=$(basename "$cert_dir")
-                echo -e "${GREEN}   Found SSL certificate for: $CERT_DOMAIN${NC}"
-                break
-            fi
-        done
-    fi
-    
-    # Choose appropriate config file
-    if [ "$USE_SSL" = true ] && [ -f "$PROJECT_DIR/nginx/fittedin.conf" ]; then
-        # Use HTTPS config with SSL
-        echo -e "${GREEN}   Using HTTPS configuration (SSL enabled)${NC}"
-        cp $PROJECT_DIR/nginx/fittedin.conf /etc/nginx/sites-available/fittedin
-        
-        # Update domain name in config if certificate domain is found
-        if [ -n "$CERT_DOMAIN" ] && [ "$CERT_DOMAIN" != "yourdomain.com" ]; then
-            sed -i "s/yourdomain.com/$CERT_DOMAIN/g" /etc/nginx/sites-available/fittedin
-            echo -e "${GREEN}   Updated domain name to: $CERT_DOMAIN${NC}"
-        fi
-    elif [ -f "$PROJECT_DIR/nginx/fittedin.http.conf" ]; then
-        # Use HTTP-only config (no SSL)
-        echo -e "${YELLOW}   Using HTTP-only configuration (no SSL)${NC}"
-        echo -e "${YELLOW}   To enable SSL later, run: sudo certbot --nginx -d yourdomain.com${NC}"
-        cp $PROJECT_DIR/nginx/fittedin.http.conf /etc/nginx/sites-available/fittedin
-    elif [ -f "$PROJECT_DIR/nginx/fittedin.conf" ]; then
-        # Fallback to main config (will fail if SSL certs don't exist, but user can fix manually)
-        echo -e "${YELLOW}   Using main configuration (may require SSL setup)${NC}"
-        cp $PROJECT_DIR/nginx/fittedin.conf /etc/nginx/sites-available/fittedin
-    else
-        echo -e "${RED}❌ Nginx configuration file not found${NC}"
-        exit 1
-    fi
-    
-    # Create symlink if it doesn't exist
-    if [ ! -L "/etc/nginx/sites-enabled/fittedin" ]; then
-        ln -s /etc/nginx/sites-available/fittedin /etc/nginx/sites-enabled/
-    fi
-    
-    # Test Nginx configuration
-    nginx -t && {
-        systemctl reload nginx
-        echo -e "${GREEN}✅ Nginx configuration updated${NC}"
-    } || {
-        echo -e "${RED}❌ Nginx configuration test failed${NC}"
-        echo -e "${YELLOW}   Check the error above and fix the configuration${NC}"
-        echo -e "${YELLOW}   Or use HTTP-only config: cp $PROJECT_DIR/nginx/fittedin.http.conf /etc/nginx/sites-available/fittedin${NC}"
-        exit 1
-    }
+    # Nginx configuration note
+    echo -e "\n${GREEN}🌐 Nginx Configuration${NC}"
+    echo -e "${YELLOW}   Note: Nginx configuration is not automatically set up.${NC}"
+    echo -e "${YELLOW}   Please configure Nginx manually using the template in:${NC}"
+    echo -e "${YELLOW}   docs/deployment/NGINX_CONFIGURATION.md${NC}"
+    echo -e "${YELLOW}   ${NC}"
+    echo -e "${YELLOW}   Quick setup:${NC}"
+    echo -e "${YELLOW}   1. Copy configuration from NGINX_CONFIGURATION.md${NC}"
+    echo -e "${YELLOW}   2. Create /etc/nginx/sites-available/fittedin${NC}"
+    echo -e "${YELLOW}   3. Update domain name and paths in the config${NC}"
+    echo -e "${YELLOW}   4. Run: sudo ln -s /etc/nginx/sites-available/fittedin /etc/nginx/sites-enabled/${NC}"
+    echo -e "${YELLOW}   5. Run: sudo nginx -t && sudo systemctl reload nginx${NC}"
     
     # Set proper permissions
     echo -e "\n${GREEN}🔐 Setting permissions...${NC}"

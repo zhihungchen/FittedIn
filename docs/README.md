@@ -12,7 +12,10 @@ docs/
 ├── development/         # Development guides and tools
 ├── features/           # Feature documentation
 ├── architecture/       # System architecture
-└── deployment/         # Deployment and presentation guides
+├── deployment/         # Deployment and production guides
+│   └── status/        # Deployment status and history
+├── troubleshooting/    # Bug fixes and troubleshooting guides
+└── README.md          # This file
 ```
 
 ---
@@ -85,12 +88,43 @@ docs/
 
 ## 🚀 Deployment
 
-**Deployment and presentation guides**
+**Deployment and production guides**
 
+### Essential Deployment Guides
+- [**Manual EC2 Deployment**](deployment/MANUAL_DEPLOYMENT.md) - Deploy to EC2 using setup.sh
+- [**AWS EC2 Deployment**](deployment/AWS_EC2_DEPLOYMENT.md) - Complete EC2 deployment guide
+- [**Nginx Configuration**](deployment/NGINX_CONFIGURATION.md) - Nginx configuration templates
+- [**AWS RDS Setup**](deployment/AWS_RDS_SETUP.md) - PostgreSQL database configuration
+- [**SSL Certificate Setup**](deployment/SSL_SETUP.md) - Let's Encrypt SSL configuration
+
+### Additional Deployment Resources
+- [**Monitoring & Alerting**](deployment/MONITORING_AND_ALERTING.md) - CloudWatch monitoring setup
+- [**Auto Scaling**](deployment/AUTO_SCALING.md) - EC2 Auto Scaling configuration
+- [**Troubleshooting Deployment**](deployment/TROUBLESHOOT_DEPLOYMENT.md) - Common deployment issues
+- [**Quick Deploy**](deployment/QUICK_DEPLOY.md) - Quick deployment reference
+
+### Deployment Status & History
+- [**Implementation Status**](deployment/status/IMPLEMENTATION_STATUS.md) - Feature implementation tracking
+- [**Production Improvements**](deployment/status/PRODUCTION_IMPROVEMENTS.md) - Production enhancements
+- [**Configuration Complete**](deployment/status/CONFIGURATION_COMPLETE.md) - Configuration status
+- [**CI/CD Status**](deployment/status/CI_CD_STATUS.md) - CI/CD pipeline status
+- [**CI/CD Test Status**](deployment/status/CI_CD_TEST_STATUS.md) - Test pipeline status
+
+### Presentation & Documentation
 - [**Midterm Summary**](deployment/MIDTERM_SUMMARY.md) - Project progress and completed features
 - [**Presentation Checklist**](deployment/MIDTERM_PRESENTATION_CHECKLIST.md) - Demo preparation checklist
-- [**Push Preparation**](deployment/PREPARE_FOR_PUSH.md) - Pre-deployment checklist
-- [**Push Checklist**](deployment/PUSH_CHECKLIST.md) - Final deployment checklist
+- [**Presentation Slides**](deployment/PRESENTATION_SLIDES.md) - Presentation materials
+
+---
+
+## 🐛 Troubleshooting
+
+**Bug fixes and troubleshooting guides**
+
+- [**Bug Analysis**](troubleshooting/BUG_ANALYSIS.md) - Bug analysis and investigation
+- [**Bug Fixes**](troubleshooting/BUG_FIXES.md) - Applied bug fixes
+- [**Comprehensive Bug Check**](troubleshooting/COMPREHENSIVE_BUG_CHECK.md) - Complete bug audit
+- [**Fixes Applied**](troubleshooting/FIXES_APPLIED.md) - Summary of applied fixes
 
 ---
 
