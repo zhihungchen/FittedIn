@@ -97,13 +97,28 @@ if [ "$IS_EC2" = true ]; then
     BRANCH="${BRANCH:-main}"
     
     if [ -d "$PROJECT_DIR/.git" ]; then
+        # Existing git repository - update it
         echo -e "${GREEN}📥 Updating repository...${NC}"
         git fetch origin
         git checkout $BRANCH
         git pull origin $BRANCH
+    elif [ -d "$PROJECT_DIR" ] && [ "$(ls -A $PROJECT_DIR 2>/dev/null)" ]; then
+        # Directory exists but is not a git repository
+        echo -e "${YELLOW}⚠️  Directory $PROJECT_DIR exists but is not a git repository${NC}"
+        echo -e "${YELLOW}   Initializing git repository and pulling latest code...${NC}"
+        
+        # Initialize git repository
+        git init
+        git remote add origin $GIT_REPO_URL 2>/dev/null || git remote set-url origin $GIT_REPO_URL
+        git fetch origin
+        git checkout -b $BRANCH 2>/dev/null || git checkout $BRANCH
+        git reset --hard origin/$BRANCH
+        echo -e "${GREEN}✅ Git repository initialized and code updated${NC}"
     else
+        # Directory doesn't exist or is empty - clone fresh
         echo -e "${GREEN}📥 Cloning repository...${NC}"
         git clone -b $BRANCH $GIT_REPO_URL $PROJECT_DIR
+        cd $PROJECT_DIR
     fi
     
     # Install backend dependencies
