@@ -32,8 +32,8 @@ const User = sequelize.define('User', {
         allowNull: true,
         validate: {
             isUrl(value) {
-                // 允许null或空字符串
-                if (value !== null && value !== '' && !/^https?:\/\/.+/.test(value)) {
+                // Allow null, undefined, or empty string
+                if (value != null && value !== '' && !/^https?:\/\/.+/.test(value)) {
                     throw new Error('Avatar URL must be a valid URL');
                 }
             }
