@@ -2,7 +2,8 @@
 
 ## Summary
 
-This document summarizes the changes made to support manual deployment using `setup.sh` and Docker-based Nginx setup.
+This document summarizes the changes made to support manual deployment using `setup.sh`
+with **host-based Nginx on EC2** and Docker Compose used **only for PostgreSQL and pgAdmin**.
 
 ## Changes Made
 
