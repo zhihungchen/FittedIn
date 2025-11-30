@@ -191,15 +191,16 @@ const startServer = async () => {
         // Run startup checks
         await runStartupChecks();
 
-        app.listen(PORT, () => {
+        app.listen(PORT, '127.0.0.1', () => {
             logger.info('Server started successfully', {
                 port: PORT,
+                host: '127.0.0.1',
                 environment: process.env.NODE_ENV,
                 nodeVersion: process.version
             });
-            console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`📱 Frontend: http://localhost:${PORT}`);
-            console.log(`🔗 API: http://localhost:${PORT}/api`);
+            console.log(`🚀 Server running on 127.0.0.1:${PORT}`);
+            console.log(`📱 Frontend: http://127.0.0.1:${PORT}`);
+            console.log(`🔗 API: http://127.0.0.1:${PORT}/api`);
             console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
         });
     } catch (error) {
