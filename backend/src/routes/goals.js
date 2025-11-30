@@ -158,7 +158,7 @@ router.post('/', authenticateToken, [
         });
     } catch (error) {
         console.error('Create goal error:', error);
-        
+
         // Handle Sequelize validation errors
         if (error.name === 'SequelizeValidationError') {
             const errors = error.errors.map(e => ({
@@ -167,14 +167,14 @@ router.post('/', authenticateToken, [
                 field: e.path,
                 message: e.message
             }));
-            
+
             return res.status(400).json({
                 success: false,
                 message: 'Validation failed',
                 errors: errors
             });
         }
-        
+
         // Handle other errors
         res.status(500).json({
             success: false,
@@ -271,7 +271,7 @@ router.put('/:id', authenticateToken, [
         });
     } catch (error) {
         console.error('Update goal error:', error);
-        
+
         // Handle Sequelize validation errors
         if (error.name === 'SequelizeValidationError') {
             const errors = error.errors.map(e => ({
@@ -280,14 +280,14 @@ router.put('/:id', authenticateToken, [
                 field: e.path,
                 message: e.message
             }));
-            
+
             return res.status(400).json({
                 success: false,
                 message: 'Validation failed',
                 errors: errors
             });
         }
-        
+
         // Handle other errors
         res.status(500).json({
             success: false,
@@ -411,7 +411,7 @@ router.patch('/:id/progress', authenticateToken, [
         });
     } catch (error) {
         console.error('Update goal progress error:', error);
-        
+
         // Handle Sequelize validation errors
         if (error.name === 'SequelizeValidationError') {
             const errors = error.errors.map(e => ({
@@ -420,14 +420,14 @@ router.patch('/:id/progress', authenticateToken, [
                 field: e.path,
                 message: e.message
             }));
-            
+
             return res.status(400).json({
                 success: false,
                 message: 'Validation failed',
                 errors: errors
             });
         }
-        
+
         // Handle other errors
         res.status(500).json({
             success: false,

@@ -237,9 +237,9 @@ function createGoalCard(goal) {
                 <span>Target: ${targetDate}</span>
             </div>
             <div class="goal-actions">
-                <button class="btn-primary" data-action="progress" style="flex: 2;">Update Progress</button>
-                <button class="btn-secondary" data-action="edit">Edit</button>
-                <button class="btn-danger" data-action="delete" style="color: #d32f2f;">Delete</button>
+                <button class="btn btn-primary" data-action="progress">Update Progress</button>
+                <button class="btn btn-secondary" data-action="edit">Edit</button>
+                <button class="btn btn-danger" data-action="delete">Delete</button>
             </div>
         </div>
     `;
@@ -391,7 +391,7 @@ async function saveProgress() {
         alert('Progress updated successfully!');
     } catch (error) {
         console.error('Failed to update progress:', error);
-        
+
         // Display validation errors if available
         let errorMessage = 'Failed to update progress. ';
         if (error.validationErrors && Array.isArray(error.validationErrors)) {
@@ -404,7 +404,7 @@ async function saveProgress() {
         } else {
             errorMessage += (error.message || 'Please try again.');
         }
-        
+
         alert(errorMessage);
     }
 }
