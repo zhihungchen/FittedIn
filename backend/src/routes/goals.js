@@ -105,6 +105,7 @@ router.post('/', authenticateToken, [
         .isFloat({ min: 0 })
         .withMessage('Target value must be a positive number'),
     body('unit')
+        .optional()
         .trim()
         .isLength({ min: 1, max: 50 })
         .withMessage('Unit must be between 1 and 50 characters'),
@@ -136,7 +137,8 @@ router.post('/', authenticateToken, [
         const goalData = {
             ...req.body,
             user_id: userId,
-            current_value: req.body.current_value || 0
+            current_value: req.body.current_value || 0,
+            unit: req.body.unit && req.body.unit.trim() ? req.body.unit.trim() : 'units'
         };
 
         const goal = await Goal.create(goalData);

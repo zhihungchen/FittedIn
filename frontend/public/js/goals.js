@@ -301,16 +301,50 @@ function updateProgress(goal) {
 // Save goal
 async function saveGoal() {
     try {
+        // Get form values
+        const title = document.getElementById('title').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const category = document.getElementById('category').value;
+        const targetValue = document.getElementById('target_value').value;
+        const currentValue = document.getElementById('current_value').value;
+        const unit = document.getElementById('unit').value.trim();
+        const targetDate = document.getElementById('target_date').value;
+        const priority = document.getElementById('priority').value;
+        const isPublic = document.getElementById('is_public').checked;
+
+        // Frontend validation
+        const errors = [];
+        if (!title) {
+            errors.push('Title is required');
+        }
+        if (!category) {
+            errors.push('Category is required');
+        }
+        if (!targetValue || isNaN(parseFloat(targetValue)) || parseFloat(targetValue) <= 0) {
+            errors.push('Target value must be a positive number');
+        }
+        if (currentValue && (isNaN(parseFloat(currentValue)) || parseFloat(currentValue) < 0)) {
+            errors.push('Current value must be a non-negative number');
+        }
+        if (unit && unit.length > 50) {
+            errors.push('Unit must be 50 characters or less');
+        }
+
+        if (errors.length > 0) {
+            alert('Please fix the following errors:\n' + errors.join('\n'));
+            return;
+        }
+
         const formData = {
-            title: document.getElementById('title').value,
-            description: document.getElementById('description').value,
-            category: document.getElementById('category').value,
-            target_value: parseFloat(document.getElementById('target_value').value),
-            current_value: parseFloat(document.getElementById('current_value').value) || 0,
-            unit: document.getElementById('unit').value,
-            target_date: document.getElementById('target_date').value || null,
-            priority: document.getElementById('priority').value,
-            is_public: document.getElementById('is_public').checked
+            title: title,
+            description: description || undefined,
+            category: category,
+            target_value: parseFloat(targetValue),
+            current_value: parseFloat(currentValue) || 0,
+            unit: unit || undefined, // Let backend use default if empty
+            target_date: targetDate || null,
+            priority: priority,
+            is_public: isPublic
         };
 
         if (editingGoalId) {
@@ -324,7 +358,21 @@ async function saveGoal() {
         alert(editingGoalId ? 'Goal updated successfully!' : 'Goal created successfully!');
     } catch (error) {
         console.error('Failed to save goal:', error);
-        alert('Failed to save goal. ' + (error.message || 'Please try again.'));
+
+        // Display validation errors if available
+        let errorMessage = 'Failed to save goal. ';
+        if (error.validationErrors && Array.isArray(error.validationErrors)) {
+            const validationMessages = error.validationErrors.map(err => {
+                const field = err.param || err.field || 'field';
+                const msg = err.msg || err.message || 'Invalid value';
+                return `${field}: ${msg}`;
+            }).join('\n');
+            errorMessage += '\n\nValidation errors:\n' + validationMessages;
+        } else {
+            errorMessage += (error.message || 'Please try again.');
+        }
+
+        alert(errorMessage);
     }
 }
 
