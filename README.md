@@ -8,6 +8,10 @@
 <!-- [![Test](https://github.com/zhihungchen/FittedIn/actions/workflows/test.yml/badge.svg)](https://github.com/zhihungchen/FittedIn/actions/workflows/test.yml) -->
 <!-- [![Deploy](https://github.com/zhihungchen/FittedIn/actions/workflows/deploy.yml/badge.svg)](https://github.com/zhihungchen/FittedIn/actions/workflows/deploy.yml) -->
 
+<div align="center">
+  <img src="docs/screenshots/homepage-hero.png" alt="FittedIn Homepage - Transform Your Health Journey" width="900"/>
+</div>
+
 ---
 
 ## Overview
