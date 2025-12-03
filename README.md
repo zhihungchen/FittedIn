@@ -10,7 +10,7 @@
 
 ---
 
-## 📖 Overview
+## Overview
 
 Most health applications are **data-driven** — they count steps, calories, or workouts — but often fail to create a **sense of community**. As a result, users start with enthusiasm but quickly lose motivation.
 
@@ -18,21 +18,65 @@ Most health applications are **data-driven** — they count steps, calories, or 
 
 ---
 
-## ✨ Current Features
+## Tech Stack & Architecture
 
-### 🔐 Authentication System
+### **Backend Architecture**
+- **Runtime**: Node.js v20+ with Express.js framework
+- **Database**: PostgreSQL 15+ with Sequelize ORM
+- **Authentication**: JWT-based stateless auth with bcrypt password hashing (10 salt rounds)
+- **Architecture Pattern**: Three-tier architecture (Presentation → Application → Data Layer)
+- **API Design**: RESTful API with proper HTTP methods and status codes
+- **Code Organization**: MVC pattern with separation of concerns (Controllers, Services, Models, Middleware)
+
+### **Infrastructure & DevOps**
+- **Cloud Platform**: AWS Cloud Computing Services
+- **Reverse Proxy**: Nginx with SSL/TLS termination and HTTP/2 support
+- **Process Management**: PM2 with cluster mode support, auto-restart, graceful shutdown, and log rotation
+- **Containerization**: Docker & Docker Compose for local development environment
+- **Auto-Scaling**: EC2 Auto Scaling Groups configured (production-ready)
+- **CI/CD**: GitHub Actions workflow for automated testing and deployment (configurable)
+
+### **Security Features**
+- **Authentication**: JWT tokens with configurable expiration (7 days default)
+- **Password Security**: bcrypt hashing with 10 salt rounds
+- **API Protection**: Rate limiting (configurable per environment), Helmet.js security headers
+- **Input Validation**: Express-validator for comprehensive request validation
+- **SQL Injection Prevention**: Parameterized queries via Sequelize ORM
+- **HTTPS**: SSL/TLS encryption in production using Let's Encrypt
+- **CORS**: Configurable Cross-Origin Resource Sharing policies
+
+### **Database Design**
+- **ORM**: Sequelize with automated migrations and seeders
+- **Relationships**: Complex relational model (Users, Profiles, Goals, Connections, Activities, Posts, Notifications)
+- **Performance**: Strategic database indexing on frequently queried columns
+- **Data Integrity**: Foreign key constraints, cascade deletes, and transaction support
+- **Seeding**: Faker.js integration for generating realistic test data at scale
+
+
+### **Key Technical Decisions**
+- **No Frontend Framework**: Vanilla JavaScript to demonstrate core web fundamentals and reduce bundle size
+- **PostgreSQL over MongoDB**: Relational data with complex joins, ACID compliance, and better query performance
+- **Monorepo Structure**: Separated frontend/backend directories for independent deployment and scaling
+- **PM2 over Docker in Production**: Better resource control and monitoring on EC2 instances
+- **Nginx Reverse Proxy**: Separation of static assets and API routing for improved scalability and caching
+
+---
+
+## Current Features
+
+### Authentication System
 - **Secure Registration**: JWT-based user registration with password validation
 - **Login System**: Email/password authentication with bcrypt password hashing
 - **Protected Routes**: JWT middleware for securing API endpoints
 - **User Profiles**: Comprehensive user profile management with privacy settings
 
-### 🎯 Goal Management
+### Goal Management
 - **Goal Tracking**: Set and monitor personal wellness goals
 - **Progress Monitoring**: Track current progress vs target values
 - **Goal Categories**: Weight loss, muscle gain, cardio, nutrition, etc.
 - **Milestone System**: Break down goals into achievable milestones
 
-### 🗄️ Database Management
+### Database Management
 - **pgAdmin Interface**: Web-based database management at `http://localhost:5050`
 - **PostgreSQL**: Robust relational database with proper indexing
 - **Migration System**: Automated database schema management
@@ -71,23 +115,23 @@ node server.js
 
 ---
 
-## 📚 Documentation
+## Documentation
 
-### 🏃‍♂️ Getting Started
+### Getting Started
 - [Quick Start Guide](docs/getting-started/QUICKSTART.md) - Get up and running in 5 minutes
 - [Development Setup](docs/development/DEVELOPMENT.md) - Detailed development environment setup
 - [Database Management](docs/development/DATABASE_MANAGEMENT.md) - pgAdmin usage guide
 
-### 🏗️ Architecture
+### Architecture
 - [System Architecture](docs/architecture/ARCHITECTURE.md) - Technical architecture overview
 - [Architecture Improvements](docs/architecture/ARCHITECTURE_IMPROVEMENT.md) - Future enhancements
 
-### 🎨 Features
+### Features
 - [Dashboard Features](docs/features/DASHBOARD_IMPROVEMENTS.md) - Dashboard personalization
 - [Profile System](docs/features/PROFILE_DEMO.md) - User profile management
 - [Authentication](docs/features/AUTH_FIX_SUMMARY.md) - Auth system documentation
 
-### 🚀 Deployment
+### Deployment
 - [Manual EC2 Deployment](docs/deployment/MANUAL_DEPLOYMENT.md) - **Deploy to EC2 using setup.sh (Current Method)**
 - [AWS EC2 Deployment Guide](docs/deployment/AWS_EC2_DEPLOYMENT.md) - Complete production deployment guide
 - [AWS RDS Setup](docs/deployment/AWS_RDS_SETUP.md) - PostgreSQL database configuration
@@ -103,7 +147,7 @@ node server.js
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### API Testing
 ```bash
@@ -147,7 +191,7 @@ SEED_NUM_USERS=100 SEED_NUM_POSTS=300 npm run db:seed:faker
 
 ---
 
-## 🎯 Next Steps
+## Next Steps
 
 ### Phase 1: Connection System (Current Focus)
 1. **User Discovery**: Implement user recommendation system
@@ -166,7 +210,7 @@ SEED_NUM_USERS=100 SEED_NUM_POSTS=300 npm run db:seed:faker
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -183,13 +227,13 @@ SEED_NUM_USERS=100 SEED_NUM_POSTS=300 npm run db:seed:faker
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🆘 Support
+## Support
 
 If you encounter any issues:
 
