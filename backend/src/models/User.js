@@ -28,13 +28,18 @@ const User = sequelize.define('User', {
         }
     },
     avatar_url: {
-        type: DataTypes.STRING(500),
+        type: DataTypes.TEXT,
         allowNull: true,
         validate: {
             isUrl(value) {
                 // Allow null, undefined, or empty string
-                if (value != null && value !== '' && !/^https?:\/\/.+/.test(value)) {
-                    throw new Error('Avatar URL must be a valid URL');
+                if (value != null && value !== '') {
+                    // Accept both HTTP/HTTPS URLs and data URLs (base64 encoded images)
+                    const isHttpUrl = /^https?:\/\/.+/.test(value);
+                    const isDataUrl = /^data:image\/.+;base64,.+/.test(value);
+                    if (!isHttpUrl && !isDataUrl) {
+                        throw new Error('Avatar URL must be a valid HTTP/HTTPS URL or data URL');
+                    }
                 }
             }
         }

@@ -55,9 +55,32 @@ router.put('/:id', authenticateToken, [
         .isLength({ min: 2, max: 100 })
         .withMessage('Display name must be between 2 and 100 characters'),
     body('avatarUrl')
-        .optional()
-        .isURL()
-        .withMessage('Avatar URL must be a valid URL')
+        .optional({ checkFalsy: false })
+        .custom((value) => {
+            if (value && typeof value === 'string') {
+                const trimmedValue = value.trim();
+                // Skip validation if empty string after trim
+                if (!trimmedValue) {
+                    return true;
+                }
+
+                // Accept both HTTP/HTTPS URLs and data URLs (base64 encoded images)
+                // Data URL format: data:image/[type];base64,[data]
+                // HTTP URL format: http:// or https://
+                const isHttpUrl = /^https?:\/\/.+/.test(trimmedValue);
+                // More lenient data URL regex to handle various formats
+                const isDataUrl = /^data:image\/[a-zA-Z0-9+.-]+\s*;\s*base64\s*,\s*.+/.test(trimmedValue);
+
+                if (!isHttpUrl && !isDataUrl) {
+                    // Log for debugging
+                    console.log('Avatar URL validation failed. Value length:', trimmedValue.length);
+                    console.log('Value preview:', trimmedValue.substring(0, 50) + '...');
+                    throw new Error('Avatar URL must be a valid HTTP/HTTPS URL or data URL (data:image/...;base64,...)');
+                }
+            }
+            return true;
+        })
+        .withMessage('Avatar URL must be a valid HTTP/HTTPS URL or data URL')
 ], async (req, res) => {
     try {
         const userId = parseInt(req.params.id);
@@ -103,6 +126,9 @@ router.put('/:id', authenticateToken, [
 
         await user.update(updateData);
 
+        // Reload user to get updated data
+        await user.reload();
+
         res.json({
             success: true,
             message: 'Profile updated successfully',
@@ -117,9 +143,24 @@ router.put('/:id', authenticateToken, [
 
     } catch (error) {
         console.error('Update user error:', error);
-        res.status(500).json({
+
+        // Provide more specific error messages
+        let errorMessage = 'Failed to update profile';
+        let statusCode = 500;
+
+        if (error.name === 'SequelizeValidationError') {
+            statusCode = 400;
+            errorMessage = 'Validation error: ' + error.errors.map(e => e.message).join(', ');
+        } else if (error.name === 'SequelizeDatabaseError') {
+            statusCode = 500;
+            errorMessage = 'Database error occurred. Please try again.';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+
+        res.status(statusCode).json({
             success: false,
-            message: 'Failed to update profile'
+            message: errorMessage
         });
     }
 });

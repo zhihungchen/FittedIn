@@ -81,6 +81,23 @@ const Profile = sequelize.define('Profile', {
             show_goals: true,
             show_connections: true
         }
+    },
+    cover_photo: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        validate: {
+            isUrl(value) {
+                // Allow null, undefined, or empty string
+                if (value != null && value !== '') {
+                    // Accept both HTTP/HTTPS URLs and data URLs (base64 encoded images)
+                    const isHttpUrl = /^https?:\/\/.+/.test(value);
+                    const isDataUrl = /^data:image\/.+;base64,.+/.test(value);
+                    if (!isHttpUrl && !isDataUrl) {
+                        throw new Error('Cover photo URL must be a valid HTTP/HTTPS URL or data URL');
+                    }
+                }
+            }
+        }
     }
 }, {
     tableName: 'profiles',

@@ -265,6 +265,13 @@ class ProfileManager {
             this.updateElement('contactEmail', user.email || 'user@example.com');
             this.updateElement('contactLocation', profile.location || 'Location not set');
 
+            // Update cover photo
+            try {
+                this.updateCoverPhoto(profile.cover_photo);
+            } catch (coverError) {
+                console.error('Error updating cover photo:', coverError);
+            }
+
             // Update avatar
             try {
                 this.updateAvatar(user.display_name || 'User', user.avatar_url);
@@ -437,24 +444,55 @@ class ProfileManager {
         const avatarElement = document.getElementById('profileAvatar');
         const initialsElement = document.getElementById('avatarInitials');
 
-        if (!avatarElement) return;
+        if (!avatarElement) {
+            console.warn('Avatar element not found');
+            return;
+        }
 
-        if (avatarUrl) {
-            // Clear initials and add image
-            if (initialsElement) initialsElement.style.display = 'none';
+        // Remove any existing image first
+        const existingImg = avatarElement.querySelector('img');
+        if (existingImg) {
+            existingImg.remove();
+        }
+
+        if (avatarUrl && typeof avatarUrl === 'string' && avatarUrl.trim()) {
+            // Hide initials
+            if (initialsElement) {
+                initialsElement.style.display = 'none';
+            }
+
+            // Create and add image
             const img = document.createElement('img');
-            img.src = avatarUrl;
-            img.alt = name;
+            img.src = avatarUrl.trim();
+            img.alt = name || 'User avatar';
+            img.style.width = '100%';
+            img.style.height = '100%';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '50%';
+
+            // Handle image load errors
+            img.onerror = (error) => {
+                console.error('Failed to load avatar image:', error);
+                // Fallback to initials if image fails to load
+                img.remove();
+                if (initialsElement) {
+                    initialsElement.style.display = 'flex';
+                    const initials = (name || 'User').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                    initialsElement.textContent = initials;
+                }
+            };
+
+            // Handle successful image load
+            img.onload = () => {
+                console.log('Avatar image loaded successfully');
+            };
+
             avatarElement.appendChild(img);
         } else {
-            // Remove any existing image
-            const existingImg = avatarElement.querySelector('img');
-            if (existingImg) existingImg.remove();
-
-            // Show initials
+            // Show initials when no avatar URL
             if (initialsElement) {
                 initialsElement.style.display = 'flex';
-                const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+                const initials = (name || 'User').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
                 initialsElement.textContent = initials;
             }
         }
@@ -673,7 +711,10 @@ class ProfileManager {
         // Edit Profile button
         const editBtn = document.getElementById('editBtn');
         if (editBtn) {
-            editBtn.addEventListener('click', () => this.toggleEditMode());
+            editBtn.addEventListener('click', () => {
+                // Open edit modal with basic section
+                this.editSection('basic');
+            });
         }
 
         // Share Profile button
@@ -741,6 +782,16 @@ class ProfileManager {
             cancelAvatarModalBtn.addEventListener('click', () => this.closeAvatarModal());
         }
 
+        // Cover photo modal close buttons
+        const closeCoverPhotoModalBtn = document.getElementById('closeCoverPhotoModalBtn');
+        const cancelCoverPhotoModalBtn = document.getElementById('cancelCoverPhotoModalBtn');
+        if (closeCoverPhotoModalBtn) {
+            closeCoverPhotoModalBtn.addEventListener('click', () => this.closeCoverPhotoModal());
+        }
+        if (cancelCoverPhotoModalBtn) {
+            cancelCoverPhotoModalBtn.addEventListener('click', () => this.closeCoverPhotoModal());
+        }
+
         // Save buttons
         const saveProfileChangesBtn = document.getElementById('saveProfileChangesBtn');
         if (saveProfileChangesBtn) {
@@ -750,6 +801,12 @@ class ProfileManager {
         const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
         if (uploadAvatarBtn) {
             uploadAvatarBtn.addEventListener('click', () => this.uploadAvatar());
+        }
+
+        // Cover photo upload
+        const uploadCoverPhotoBtn = document.getElementById('uploadCoverPhotoBtn');
+        if (uploadCoverPhotoBtn) {
+            uploadCoverPhotoBtn.addEventListener('click', () => this.uploadCoverPhoto());
         }
 
         // Form submission
@@ -769,6 +826,23 @@ class ProfileManager {
             });
         }
 
+        // Cover photo upload
+        const coverPhotoInput = document.getElementById('coverPhotoInput');
+        if (coverPhotoInput) {
+            coverPhotoInput.addEventListener('change', (e) => {
+                this.handleCoverPhotoPreview(e);
+            });
+        }
+
+        // Choose file button in cover photo upload modal
+        const chooseCoverPhotoFileBtn = document.getElementById('chooseCoverPhotoFileBtn');
+        if (chooseCoverPhotoFileBtn) {
+            chooseCoverPhotoFileBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('coverPhotoInput').click();
+            });
+        }
+
         // Open avatar upload modal
         const openAvatarUploadBtn = document.getElementById('openAvatarUploadBtn');
         if (openAvatarUploadBtn) {
@@ -782,6 +856,12 @@ class ProfileManager {
                 e.preventDefault();
                 document.getElementById('avatarInput').click();
             });
+        }
+
+        // Edit cover photo button
+        const editCoverBtn = document.getElementById('editCoverBtn');
+        if (editCoverBtn) {
+            editCoverBtn.addEventListener('click', () => this.openCoverPhotoUpload());
         }
     }
 
@@ -810,6 +890,16 @@ class ProfileManager {
             avatarModal.addEventListener('click', (e) => {
                 if (e.target === avatarModal) {
                     this.closeAvatarModal();
+                }
+            });
+        }
+
+        // Close cover photo modal when clicking outside
+        const coverPhotoModal = document.getElementById('coverPhotoModal');
+        if (coverPhotoModal) {
+            coverPhotoModal.addEventListener('click', (e) => {
+                if (e.target === coverPhotoModal) {
+                    this.closeCoverPhotoModal();
                 }
             });
         }
@@ -1175,6 +1265,20 @@ class ProfileManager {
 
     closeAvatarModal() {
         document.getElementById('avatarModal').style.display = 'none';
+        // Reset preview
+        const preview = document.getElementById('uploadPreview');
+        if (preview) {
+            preview.innerHTML = `
+                <div class="upload-placeholder">
+                    <i class="icon-camera"></i>
+                    <p>Click to upload avatar</p>
+                </div>
+            `;
+        }
+        const avatarInput = document.getElementById('avatarInput');
+        if (avatarInput) {
+            avatarInput.value = '';
+        }
     }
 
     handleAvatarPreview(event) {
@@ -1198,14 +1302,424 @@ class ProfileManager {
             return;
         }
 
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            this.showError('Please select an image file');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            this.showError('File size must be less than 5MB');
+            return;
+        }
+
         try {
-            // In a real implementation, you would upload the file to a server
-            // For now, we'll just show a success message
+            // Disable upload button and show loading
+            const uploadBtn = document.getElementById('uploadAvatarBtn');
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = 'Uploading...';
+            }
+
+            // Convert file to base64 data URL
+            const dataUrl = await this.fileToDataURL(file);
+
+            if (!dataUrl || !dataUrl.startsWith('data:image/')) {
+                throw new Error('Failed to convert file to image data URL');
+            }
+
+            // Resize image if it's too large (optional optimization)
+            let optimizedDataUrl;
+            try {
+                optimizedDataUrl = await this.resizeImageIfNeeded(dataUrl, 512, 512);
+            } catch (resizeError) {
+                console.warn('Image resize failed, using original:', resizeError);
+                // Use original if resize fails
+                optimizedDataUrl = dataUrl;
+            }
+
+            // Validate optimized data URL
+            if (!optimizedDataUrl || !optimizedDataUrl.startsWith('data:image/')) {
+                throw new Error('Invalid image data after optimization');
+            }
+
+            // Get current user ID
+            const userId = authState.getUserId();
+            if (!userId) {
+                throw new Error('User not authenticated');
+            }
+
+            // Update user profile with avatar URL
+            const response = await api.users.updateProfile(parseInt(userId), {
+                avatarUrl: optimizedDataUrl
+            });
+
+            // Get updated user data from response
+            const user = response.user || response.data?.user;
+            const avatarUrl = user?.avatarUrl || optimizedDataUrl;
+            const displayName = user?.displayName || this.currentProfile?.user?.display_name || 'User';
+
+            // Update current profile data
+            if (this.currentProfile && this.currentProfile.user) {
+                this.currentProfile.user.avatar_url = avatarUrl;
+            }
+
+            // Refresh avatar display immediately
+            console.log('Updating avatar display with URL length:', avatarUrl ? avatarUrl.length : 0);
+            this.updateAvatar(displayName, avatarUrl);
+
+            // Reload profile to ensure everything is in sync
+            try {
+                await this.loadProfile();
+            } catch (reloadError) {
+                console.warn('Failed to reload profile after avatar update:', reloadError);
+                // Continue anyway, we've already updated the display
+            }
+
             this.showSuccess('Avatar updated successfully!');
             this.closeAvatarModal();
         } catch (error) {
             console.error('Failed to upload avatar:', error);
-            this.showError('Failed to upload avatar. Please try again.');
+            let errorMessage = 'Failed to upload avatar. Please try again.';
+
+            // Provide more specific error messages
+            if (error.message) {
+                if (error.message.includes('Validation failed')) {
+                    errorMessage = 'Invalid image format. Please select a valid image file.';
+                } else if (error.message.includes('401') || error.message.includes('unauthorized')) {
+                    errorMessage = 'Session expired. Please log in again.';
+                } else if (error.message.includes('403')) {
+                    errorMessage = 'Permission denied. You can only update your own avatar.';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'Upload timeout. Please try again with a smaller image.';
+                } else {
+                    errorMessage = error.message;
+                }
+            }
+
+            // Show validation errors if available
+            if (error.validationErrors && Array.isArray(error.validationErrors)) {
+                const validationMessages = error.validationErrors.map(err => {
+                    const field = err.param || err.path || 'field';
+                    const msg = err.msg || err.message || 'Invalid value';
+                    return `${field}: ${msg}`;
+                });
+                errorMessage = `Validation failed: ${validationMessages.join(', ')}`;
+            }
+
+            this.showError(errorMessage);
+        } finally {
+            // Re-enable upload button
+            const uploadBtn = document.getElementById('uploadAvatarBtn');
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Update Photo';
+            }
+        }
+    }
+
+    // Helper function to convert file to data URL
+    fileToDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(new Error('Failed to read file'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Helper function to resize image if needed
+    resizeImageIfNeeded(dataUrl, maxWidth, maxHeight) {
+        return new Promise((resolve, reject) => {
+            if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) {
+                reject(new Error('Invalid image data URL'));
+                return;
+            }
+
+            const img = new Image();
+
+            // Set timeout to prevent hanging if image never loads
+            const timeout = setTimeout(() => {
+                reject(new Error('Image loading timeout'));
+            }, 10000); // 10 second timeout
+
+            img.onload = () => {
+                clearTimeout(timeout);
+                try {
+                    // If image is smaller than max dimensions, return original
+                    if (img.width <= maxWidth && img.height <= maxHeight) {
+                        resolve(dataUrl);
+                        return;
+                    }
+
+                    // Calculate new dimensions while maintaining aspect ratio
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    // Ensure dimensions are valid
+                    if (width <= 0 || height <= 0 || !isFinite(width) || !isFinite(height)) {
+                        console.warn('Invalid dimensions calculated, using original');
+                        resolve(dataUrl);
+                        return;
+                    }
+
+                    // Resize image
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+
+                    // Use high-quality image rendering
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convert to data URL with compression (JPEG quality 0.8)
+                    const resizedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+                    // Validate the result
+                    if (!resizedDataUrl || resizedDataUrl.length < 100) {
+                        console.warn('Resized image seems too small, using original');
+                        resolve(dataUrl);
+                        return;
+                    }
+
+                    resolve(resizedDataUrl);
+                } catch (error) {
+                    console.error('Error during image resize:', error);
+                    // If resize fails, return original
+                    resolve(dataUrl);
+                }
+            };
+
+            img.onerror = (error) => {
+                clearTimeout(timeout);
+                console.error('Image loading error:', error);
+                reject(new Error('Failed to load image for resizing'));
+            };
+
+            img.src = dataUrl;
+        });
+    }
+
+    // ===== Cover Photo Management =====
+    openCoverPhotoUpload() {
+        document.getElementById('coverPhotoModal').style.display = 'block';
+    }
+
+    closeCoverPhotoModal() {
+        document.getElementById('coverPhotoModal').style.display = 'none';
+        // Reset preview
+        const preview = document.getElementById('coverPhotoPreview');
+        if (preview) {
+            preview.innerHTML = `
+                <div class="upload-placeholder">
+                    <i class="icon-camera"></i>
+                    <p>Click to upload cover photo</p>
+                </div>
+            `;
+        }
+        const coverPhotoInput = document.getElementById('coverPhotoInput');
+        if (coverPhotoInput) {
+            coverPhotoInput.value = '';
+        }
+    }
+
+    handleCoverPhotoPreview(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            this.showError('Please select an image file');
+            event.target.value = ''; // Clear the input
+            return;
+        }
+
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            this.showError('File size must be less than 10MB');
+            event.target.value = ''; // Clear the input
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const preview = document.getElementById('coverPhotoPreview');
+            if (preview) {
+                preview.innerHTML = `
+                    <img src="${e.target.result}" 
+                         alt="Cover Photo Preview" 
+                         style="max-width: 100%; 
+                                max-height: 400px; 
+                                width: 100%;
+                                object-fit: cover; 
+                                border-radius: 8px;
+                                display: block;">
+                `;
+            }
+        };
+        reader.onerror = () => {
+            this.showError('Failed to preview image');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async uploadCoverPhoto() {
+        const fileInput = document.getElementById('coverPhotoInput');
+        const file = fileInput.files[0];
+
+        if (!file) {
+            this.showError('Please select a file to upload');
+            return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            this.showError('Please select an image file');
+            return;
+        }
+
+        // Validate file size (max 10MB for cover photos, they can be larger)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            this.showError('File size must be less than 10MB');
+            return;
+        }
+
+        try {
+            // Disable upload button and show loading
+            const uploadBtn = document.getElementById('uploadCoverPhotoBtn');
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = 'Uploading...';
+            }
+
+            // Convert file to base64 data URL
+            const dataUrl = await this.fileToDataURL(file);
+
+            if (!dataUrl || !dataUrl.startsWith('data:image/')) {
+                throw new Error('Failed to convert file to image data URL');
+            }
+
+            // Resize image for cover photo (recommended size: 1200x300 or similar)
+            // Cover photos are wider, so we use larger dimensions
+            let optimizedDataUrl;
+            try {
+                optimizedDataUrl = await this.resizeImageIfNeeded(dataUrl, 1200, 600);
+            } catch (resizeError) {
+                console.warn('Cover photo resize failed, using original:', resizeError);
+                optimizedDataUrl = dataUrl;
+            }
+
+            // Validate optimized data URL
+            if (!optimizedDataUrl || !optimizedDataUrl.startsWith('data:image/')) {
+                throw new Error('Invalid image data after optimization');
+            }
+
+            // Update profile with cover photo URL
+            const response = await api.profiles.updateMyProfile({
+                cover_photo: optimizedDataUrl
+            });
+
+            // Get updated profile data from response
+            const profile = response.profile || response.data?.profile;
+            const coverPhotoUrl = profile?.cover_photo || optimizedDataUrl;
+
+            // Update current profile data
+            if (this.currentProfile) {
+                this.currentProfile.cover_photo = coverPhotoUrl;
+            }
+
+            // Update cover photo display immediately
+            console.log('Updating cover photo display with URL length:', coverPhotoUrl ? coverPhotoUrl.length : 0);
+            this.updateCoverPhoto(coverPhotoUrl);
+
+            // Reload profile to ensure everything is in sync
+            try {
+                await this.loadProfile();
+            } catch (reloadError) {
+                console.warn('Failed to reload profile after cover photo update:', reloadError);
+                // Continue anyway, we've already updated the display
+            }
+
+            this.showSuccess('Cover photo updated successfully!');
+            this.closeCoverPhotoModal();
+        } catch (error) {
+            console.error('Failed to upload cover photo:', error);
+            let errorMessage = 'Failed to upload cover photo. Please try again.';
+
+            // Provide more specific error messages
+            if (error.message) {
+                if (error.message.includes('Validation failed')) {
+                    errorMessage = 'Invalid image format. Please select a valid image file.';
+                } else if (error.message.includes('401') || error.message.includes('unauthorized')) {
+                    errorMessage = 'Session expired. Please log in again.';
+                } else if (error.message.includes('403')) {
+                    errorMessage = 'Permission denied. You can only update your own cover photo.';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'Upload timeout. Please try again with a smaller image.';
+                } else {
+                    errorMessage = error.message;
+                }
+            }
+
+            // Show validation errors if available
+            if (error.validationErrors && Array.isArray(error.validationErrors)) {
+                const validationMessages = error.validationErrors.map(err => {
+                    const field = err.param || err.path || 'field';
+                    const msg = err.msg || err.message || 'Invalid value';
+                    return `${field}: ${msg}`;
+                });
+                errorMessage = `Validation failed: ${validationMessages.join(', ')}`;
+            }
+
+            this.showError(errorMessage);
+        } finally {
+            // Re-enable upload button
+            const uploadBtn = document.getElementById('uploadCoverPhotoBtn');
+            if (uploadBtn) {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Update Cover Photo';
+            }
+        }
+    }
+
+    // Update cover photo display
+    updateCoverPhoto(coverPhotoUrl) {
+        const coverPhotoElement = document.getElementById('coverPhoto');
+
+        if (!coverPhotoElement) {
+            console.warn('Cover photo element not found');
+            return;
+        }
+
+        if (coverPhotoUrl && typeof coverPhotoUrl === 'string' && coverPhotoUrl.trim()) {
+            // Set background image
+            coverPhotoElement.style.backgroundImage = `url(${coverPhotoUrl.trim()})`;
+            coverPhotoElement.style.backgroundSize = 'cover';
+            coverPhotoElement.style.backgroundPosition = 'center';
+            coverPhotoElement.style.backgroundRepeat = 'no-repeat';
+        } else {
+            // Remove background image if no cover photo
+            coverPhotoElement.style.backgroundImage = 'none';
+            // You might want to set a default background color here
+            coverPhotoElement.style.backgroundColor = '#e0e0e0';
         }
     }
 
