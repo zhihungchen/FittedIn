@@ -1584,6 +1584,27 @@ body {
     margin-bottom: var(--spacing-sm);
 }
 
+.post-image-container {
+    margin-top: var(--spacing-md);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-tertiary);
+}
+
+.post-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    max-height: 600px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform var(--transition-normal);
+}
+
+.post-image:hover {
+    transform: scale(1.02);
+}
+
 .post-image-placeholder {
     margin-top: var(--spacing-md);
     padding: var(--spacing-lg);

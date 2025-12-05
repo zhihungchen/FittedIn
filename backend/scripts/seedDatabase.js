@@ -330,6 +330,27 @@ async function createConnections(users, count) {
     return connections;
 }
 
+// Generate a random image URL (30% chance of having an image)
+function generateImageUrl() {
+    // 30% chance to include an image
+    if (Math.random() > 0.3) {
+        return null;
+    }
+
+    // Use Unsplash Source for free random images
+    const imageKeywords = [
+        'fitness', 'workout', 'gym', 'yoga', 'running', 'cycling',
+        'swimming', 'weightlifting', 'health', 'wellness', 'nutrition',
+        'sports', 'exercise', 'training', 'bodybuilding'
+    ];
+    const keyword = getRandomElement(imageKeywords);
+    const width = getRandomInt(400, 800);
+    const height = getRandomInt(400, 600);
+
+    // Use Unsplash Source API for random fitness-related images
+    return `https://source.unsplash.com/${width}x${height}/?${keyword}`;
+}
+
 async function createPosts(users, count) {
     console.log(`\n📮 Creating ${count} posts...`);
     const posts = [];
@@ -347,6 +368,7 @@ async function createPosts(users, count) {
         "New goal unlocked: {goal}"
     ];
 
+    let postsWithImages = 0;
     for (let i = 0; i < count; i++) {
         const user = getRandomElement(users);
         const template = getRandomElement(fitnessPostTemplates);
@@ -358,10 +380,14 @@ async function createPosts(users, count) {
             .replace('{tip}', faker.lorem.sentence())
             .replace('{update}', faker.lorem.sentence());
 
+        const imageUrl = generateImageUrl();
+        if (imageUrl) postsWithImages++;
+
         try {
             const post = await Post.create({
                 user_id: user.id,
-                content: content
+                content: content,
+                image_url: imageUrl
             });
             posts.push(post);
         } catch (error) {
@@ -369,7 +395,7 @@ async function createPosts(users, count) {
         }
     }
 
-    console.log(`✅ Created ${posts.length} posts`);
+    console.log(`✅ Created ${posts.length} posts (${postsWithImages} with images)`);
     return posts;
 }
 

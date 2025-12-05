@@ -122,23 +122,47 @@ async function getSeededUsers() {
     }
 }
 
+// Generate a random image URL (30% chance of having an image)
+function generateImageUrl() {
+    // 30% chance to include an image
+    if (Math.random() > 0.3) {
+        return null;
+    }
+
+    // Use Unsplash Source for free random images
+    // Unsplash Source provides random images based on keywords
+    const imageKeywords = [
+        'fitness', 'workout', 'gym', 'yoga', 'running', 'cycling',
+        'swimming', 'weightlifting', 'health', 'wellness', 'nutrition',
+        'sports', 'exercise', 'training', 'bodybuilding'
+    ];
+    const keyword = getRandomElement(imageKeywords);
+    const width = getRandomInt(400, 800);
+    const height = getRandomInt(400, 600);
+
+    // Use Unsplash Source API for random fitness-related images
+    return `https://source.unsplash.com/${width}x${height}/?${keyword}`;
+}
+
 // Generate a new post
 async function generatePost(user) {
     try {
         const content = generatePostContent();
+        const imageUrl = generateImageUrl();
 
         // Generate recent timestamp (within last 1-24 hours)
         const recentTime = faker.date.recent({ days: 1 });
 
         // Create post with custom timestamp using raw query
         const [result] = await sequelize.query(`
-            INSERT INTO posts (user_id, content, created_at, updated_at)
-            VALUES (:userId, :content, :createdAt, :updatedAt)
+            INSERT INTO posts (user_id, content, image_url, created_at, updated_at)
+            VALUES (:userId, :content, :imageUrl, :createdAt, :updatedAt)
             RETURNING id
         `, {
             replacements: {
                 userId: user.id,
                 content: content,
+                imageUrl: imageUrl,
                 createdAt: recentTime,
                 updatedAt: recentTime
             },
@@ -149,7 +173,8 @@ async function generatePost(user) {
         const postId = result[0]?.id || result.id;
         const post = await Post.findByPk(postId);
 
-        console.log(`   ✓ Created post by ${user.display_name}`);
+        const imageInfo = imageUrl ? ' (with image)' : '';
+        console.log(`   ✓ Created post by ${user.display_name}${imageInfo}`);
         return post;
     } catch (error) {
         console.error(`   ✗ Failed to create post for ${user.display_name}:`, error.message);

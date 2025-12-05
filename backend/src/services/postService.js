@@ -12,7 +12,7 @@ class PostService {
     /**
      * Create a new post
      */
-    async createPost(userId, content) {
+    async createPost(userId, content, imageUrl = null) {
         try {
             logger.info('Creating post', { userId });
 
@@ -26,7 +26,8 @@ class PostService {
 
             const post = await Post.create({
                 user_id: userId,
-                content: content.trim()
+                content: content.trim(),
+                image_url: imageUrl || null
             });
 
             // Load with user info

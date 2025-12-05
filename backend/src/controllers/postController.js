@@ -9,13 +9,13 @@ class PostController {
      */
     createPost = asyncHandler(async (req, res) => {
         const userId = req.user.id;
-        const { content } = req.body;
+        const { content, image_url } = req.body;
 
         if (!content) {
             return ResponseHandler.validationError(res, [{ msg: 'Content is required' }]);
         }
 
-        const post = await postService.createPost(userId, content);
+        const post = await postService.createPost(userId, content, image_url);
 
         ResponseHandler.success(
             res,

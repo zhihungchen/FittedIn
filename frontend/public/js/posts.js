@@ -167,7 +167,11 @@ function renderPost(post) {
             ${isPost ? `
                 <div class="post-body">
                     <div class="post-text">${escapeHtml(post.content).replace(/\n/g, '<br>')}</div>
-                    ${post.imagePlaceholder ? `
+                    ${post.image_url ? `
+                        <div class="post-image-container">
+                            <img src="${escapeHtml(post.image_url)}" alt="Post image" class="post-image" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'post-image-placeholder\\'><svg width=\\'24\\' height=\\'24\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\' ry=\\'2\\'></rect><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'></circle><polyline points=\\'21 15 16 10 5 21\\'></polyline></svg><span>Failed to load image</span></div>'">
+                        </div>
+                    ` : post.imagePlaceholder ? `
                         <div class="post-image-placeholder">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -872,7 +876,8 @@ async function refreshPostsFeed() {
             userName: post.user?.display_name || 'Unknown User',
             userAvatar: post.user?.avatar_url ? '' : (post.user?.display_name?.slice(0, 2).toUpperCase() || 'U'),
             content: post.content,
-            postType: 'text',
+            image_url: post.image_url || null,
+            postType: post.image_url ? 'image' : 'text',
             likes: post.like_count || 0,
             commentCount: post.comment_count || 0,
             isLiked: post.is_liked || false,
