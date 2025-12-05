@@ -1,7 +1,6 @@
 # FittedIn — Health & Wellness Networking Platform
 
-> **ECE 452 Software Engineering Project**  
-> Group 1: Chih-hung Chen, Haoyang Guo, Alaric Li, Yixiao Xiao, Adam Ashby, Carlos Ortiz, Kelvin Ihezue  
+> **ECE 452 Software Engineering Project** 
 > Semester: Fall 2025
 
 <!-- GitHub Actions workflows are currently disabled - using manual deployment with setup.sh -->
